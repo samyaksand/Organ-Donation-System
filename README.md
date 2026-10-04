@@ -1,21 +1,61 @@
 # OrganFlow
 
-**Organ Donation Network & Intelligence Platform**
+## Organ Donation Network & Intelligence Platform
 
-A web platform for **registering organ donors**, recording **organs pledged or procured at hospitals**, and letting
-families and care teams **search organ availability** by organ type and city. Administrators verify records, manage
-donors and hospitals, and review withdrawal requests.
-
-The project started as a *Kidney Donation Management System* built with Express, EJS and MySQL. **Phase 1**
-(this version, rebranded as OrganFlow) migrates it to a modern full-stack TypeScript application and generalises it
-to multiple organ types, while preserving every workflow of the original app.
+OrganFlow is a web platform for donor registration, organ management, hospital information, organ availability
+search, and administrative workflows. Donors register, manage their profile and next-of-kin details, register
+organs, and request withdrawal. Administrators verify records, manage donors, organs and hospitals, and review
+withdrawal requests. The public can search organ availability and browse the hospital directory without ever
+seeing donor identities.
 
 > Information shown by this application does not replace advice from a medical team.
 
 ---
 
+## From CS254 to OrganFlow
+
+About four years ago, this started as a "Kidney Donation Management System," a project for my Database Systems
+(CS254) course under Prof. Annappa. It scored 9/10 CGPA. The original app had seven pages: Home, Admin Login,
+Donor Login, Donor Account, Admin Account, Register to be a Donor, and Check Kidney Availability. Express, EJS
+and MySQL, built for a course assignment.
+
+I came back to it and rebuilt it as OrganFlow. The core workflow is still recognizable (donors register, admins
+manage records, anyone can check availability) but the system is now a multi-organ platform with a modern
+architecture, real security practices, a proper UI, automated tests, and a live deployment.
+
+## From the Original Project to OrganFlow
+
+| Area | Original Project | OrganFlow |
+|------|------------------|-----------|
+| Scope | Kidney-focused | Multi-organ platform (kidney, liver, heart, lung, pancreas, cornea, other) |
+| Frontend | HTML, CSS, JavaScript, EJS | React, TypeScript, Vite, Tailwind CSS, shadcn/ui |
+| Backend | Express + Node.js | Express + TypeScript REST API |
+| Database | MySQL | PostgreSQL + Prisma |
+| User experience | Basic multi-page workflow | Responsive SPA with light/dark mode |
+| Donor management | Basic donor registration and account pages | Donor portal, profile, medical information, next of kin, organ registration, withdrawal workflow |
+| Organ management | Kidney availability | Multi-organ registry, organ status, donor and hospital associations |
+| Hospital management | Basic hospital/centre information | Hospital directory, management, and availability information |
+| Administration | Basic admin pages | Admin dashboard with donor, organ, hospital and withdrawal management |
+| Authentication | Legacy authentication | JWT, HTTP-only cookies, bcrypt, role-based authorization |
+| Validation | Basic validation | Strict Zod validation and structured API errors |
+| Security | Legacy configuration and security practices | Environment-based secrets, rate limiting, Helmet, CORS, secure cookies |
+| Testing | No comparable automated test suite | Automated frontend and backend test suites (Prisma mocked; see Testing) |
+| Architecture | Express + EJS application | React SPA, layered Express API, Prisma, PostgreSQL |
+| Deployment | Academic/local project | Deployed web application |
+
+## What Changed
+
+- Re-engineered the original application with a modern full-stack architecture.
+- Migrated MySQL to PostgreSQL with Prisma and a structured schema.
+- Generalized the system from kidney-only workflows to multiple organ types.
+- Rebuilt the UI and donor/admin workflows as a responsive single-page app.
+- Added proper authentication, authorization, validation, security practices and automated tests.
+
+---
+
 ## Contents
 
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
@@ -27,8 +67,55 @@ to multiple organ types, while preserving every workflow of the original app.
 - [Getting started](#getting-started)
 - [Scripts](#scripts)
 - [Testing](#testing)
-- [Migration notes (legacy → Phase 1)](#migration-notes-legacy--phase-1)
+- [Migration notes (legacy to Phase 1)](#migration-notes-legacy-to-phase-1)
 - [Roadmap](#roadmap)
+
+---
+
+## Screenshots
+
+Captured from the running OrganFlow application with demo data (Mumbai hospitals, synthetic donors). All screenshots
+live in [`docs/screenshots/`](docs/screenshots/).
+
+### Public
+
+| | |
+|---|---|
+| ![Landing page](docs/screenshots/01-landing-page.png) **Landing page** | ![Organ availability search](docs/screenshots/02-organ-availability-search.png) **Organ availability search** |
+| ![Filtered by organ type](docs/screenshots/03-organ-availability-filtered.png) **Filtered by organ type (Kidney)** | ![Hospital directory](docs/screenshots/04-hospital-directory.png) **Hospital directory, with address, contact and availability per hospital** |
+
+### Authentication
+
+| | |
+|---|---|
+| ![Donor registration](docs/screenshots/05-donor-registration.png) **Donor registration** | ![Donor sign in](docs/screenshots/06-donor-login.png) **Donor sign in** |
+| ![Administrator sign in](docs/screenshots/07-admin-login.png) **Administrator sign in** | |
+
+### Donor Portal
+
+| | |
+|---|---|
+| ![Donor dashboard](docs/screenshots/08-donor-dashboard.png) **Dashboard: account status, organ counts, recent activity** | ![Profile, personal details](docs/screenshots/09-donor-profile-personal.png) **Profile, personal details** |
+| ![Profile, medical and care](docs/screenshots/10-donor-profile-medical.png) **Profile, medical and care details** | ![Profile, next of kin](docs/screenshots/11-donor-profile-next-of-kin.png) **Profile, next of kin** |
+| ![Profile, change password](docs/screenshots/12-donor-profile-security.png) **Profile, change password** | ![Registered organs](docs/screenshots/13-donor-registered-organs.png) **Registered organs and their status** |
+| ![Add organ](docs/screenshots/14-donor-add-organ.png) **Register a new organ** | ![Withdrawal request](docs/screenshots/15-donor-withdrawal-request.png) **Withdrawal request, with confirmation** |
+
+### Admin Portal
+
+| | |
+|---|---|
+| ![Admin dashboard](docs/screenshots/16-admin-dashboard.png) **Dashboard with live registry figures** | ![Donor management](docs/screenshots/17-admin-donor-management.png) **Donor management: search, filter, status** |
+| ![Edit donor](docs/screenshots/18-admin-donor-edit.png) **Edit donor details** | ![Organ management](docs/screenshots/19-admin-organ-management.png) **Organ management across all organ types** |
+| ![Add organ record](docs/screenshots/20-admin-organ-create.png) **Create an organ record for a donor** | ![Hospital management](docs/screenshots/21-admin-hospital-management.png) **Hospital management** |
+| ![Add hospital](docs/screenshots/22-admin-hospital-create.png) **Add a hospital** | ![Withdrawal review queue](docs/screenshots/23-admin-withdrawal-review.png) **Withdrawal review queue** |
+| ![Approve withdrawal dialog](docs/screenshots/24-admin-withdrawal-approve-dialog.png) **Approve a withdrawal, with its effect explained before confirming** | |
+
+### UI: themes and responsive layout
+
+| | |
+|---|---|
+| ![Dark theme, landing page](docs/screenshots/25-dark-theme-landing.png) **Dark theme: landing page** | ![Dark theme, donor dashboard](docs/screenshots/26-dark-theme-donor-dashboard.png) **Dark theme: donor dashboard** |
+| ![Mobile landing page](docs/screenshots/27-mobile-landing-page.png) **Mobile: landing page** | ![Mobile admin donor management](docs/screenshots/28-mobile-admin-donor-management.png) **Mobile: donor management (table becomes cards)** |
 
 ---
 
@@ -301,7 +388,7 @@ npm test
 
 End-to-end tests against a real PostgreSQL database are not part of Phase 1 (see roadmap).
 
-## Migration notes (legacy → Phase 1)
+## Migration notes (legacy to Phase 1)
 
 | Legacy | Phase 1 |
 |--------|---------|
