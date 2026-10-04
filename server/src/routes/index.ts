@@ -1,0 +1,21 @@
+import { Router } from 'express';
+import adminRoutes from './admin.routes';
+import authRoutes from './auth.routes';
+import donorRoutes from './donor.routes';
+import hospitalRoutes from './hospital.routes';
+import organRoutes from './organ.routes';
+import withdrawalRoutes from './withdrawal.routes';
+
+/** Versioned API: mounted at /api/v1. */
+export const apiV1 = Router();
+
+apiV1.get('/health', (_req, res) => {
+  res.json({ data: { status: 'ok' } });
+});
+
+apiV1.use('/auth', authRoutes);
+apiV1.use('/donors', donorRoutes);
+apiV1.use('/organs', organRoutes);
+apiV1.use('/hospitals', hospitalRoutes);
+apiV1.use('/withdrawals', withdrawalRoutes);
+apiV1.use('/admin', adminRoutes);

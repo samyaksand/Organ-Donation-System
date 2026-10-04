@@ -2,3 +2,22 @@
 npm-debug.log
 .DS_Store
 /*.env
+
+# Dependencies (workspaces)
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Build output
+dist/
+*.tsbuildinfo
+coverage/
+
+# Logs
+*.log
+
+# Local AI assistant instructions (not committed)
+CLAUDE.md

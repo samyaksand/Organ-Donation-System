@@ -1,25 +1,31 @@
 {
-  "name": "database",
-  "version": "1.0.0",
-  "description": "",
-  "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "name": "organ-donation-system",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Organ Donation Management Platform — React + Express + Prisma/PostgreSQL",
+  "license": "GPL-3.0",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "engines": {
+    "node": ">=20.19"
   },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "body-parser": "^1.19.2",
-    "cookie-parser": "^1.4.6",
-    "dotenv": "^8.6.0",
-    "ejs": "^3.1.6",
-    "express": "^4.17.3",
-    "express-session": "^1.17.2",
-    "jsonwebtoken": "^8.5.1",
-    "mysql": "^2.18.1",
-    "nodemon": "^2.0.15",
-    "passport": "^0.4.1",
-    "passport-local": "^1.0.0"
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w server && npm run build -w client",
+    "start": "npm run start -w server",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w client",
+    "lint": "npm run lint -w server && npm run lint -w client",
+    "test": "npm run test -w server && npm run test -w client",
+    "db:generate": "npm run db:generate -w server",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:deploy": "npm run db:deploy -w server",
+    "db:seed": "npm run db:seed -w server",
+    "db:studio": "npm run db:studio -w server",
+    "admin:create": "npm run admin:create -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
   }
 }
