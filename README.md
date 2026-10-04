@@ -1,12 +1,14 @@
-# Organ Donation System
+# OrganFlow
+
+**Organ Donation Network & Intelligence Platform**
 
 A web platform for **registering organ donors**, recording **organs pledged or procured at hospitals**, and letting
 families and care teams **search organ availability** by organ type and city. Administrators verify records, manage
 donors and hospitals, and review withdrawal requests.
 
 The project started as a *Kidney Donation Management System* built with Express, EJS and MySQL. **Phase 1**
-(this version) migrates it to a modern full-stack TypeScript application and generalises it to multiple organ
-types, while preserving every workflow of the original app.
+(this version, rebranded as OrganFlow) migrates it to a modern full-stack TypeScript application and generalises it
+to multiple organ types, while preserving every workflow of the original app.
 
 > Information shown by this application does not replace advice from a medical team.
 

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-const APP_NAME = 'Organ Donation System';
+const APP_NAME = 'OrganFlow';
 
 /** Sets a descriptive <title> per page (announced by screen readers on navigation). */
 export function useDocumentTitle(title?: string) {

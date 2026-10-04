@@ -49,7 +49,7 @@ export function Footer() {
       </div>
       <div className="border-t">
         <p className="container py-4 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} Organ Donation System. Information here does not replace advice from your medical team.
+          © {new Date().getFullYear()} OrganFlow. Information here does not replace advice from your medical team.
         </p>
       </div>
     </footer>
