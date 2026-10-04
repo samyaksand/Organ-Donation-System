@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens (HSL channels). Both themes are designed explicitly — dark is not an inversion.
+ * Light: cool off-white canvas, white cards, deep teal primary (AA on white).
+ * Dark: blue-slate canvas, slightly lifted cards, brighter teal primary with dark text.
+ */
+@layer base {
+  :root {
+    --background: 210 25% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 174 84% 24%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 25% 94%;
+    --secondary-foreground: 222 40% 18%;
+    --muted: 210 25% 95%;
+    --muted-foreground: 215 16% 40%;
+    --accent: 173 45% 93%;
+    --accent-foreground: 174 84% 18%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 152 69% 28%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 34%;
+    --warning-foreground: 0 0% 100%;
+    --info: 214 84% 42%;
+    --info-foreground: 0 0% 100%;
+    --border: 214 24% 88%;
+    --input: 214 22% 82%;
+    --ring: 174 84% 30%;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222 40% 18%;
+    --radius: 0.625rem;
+  }
+
+  .dark {
+    --background: 222 32% 7%;
+    --foreground: 210 25% 95%;
+    --card: 222 28% 10%;
+    --card-foreground: 210 25% 95%;
+    --popover: 222 28% 11%;
+    --popover-foreground: 210 25% 95%;
+    --primary: 171 64% 52%;
+    --primary-foreground: 222 47% 8%;
+    --secondary: 220 22% 16%;
+    --secondary-foreground: 210 25% 92%;
+    --muted: 220 22% 14%;
+    --muted-foreground: 215 18% 68%;
+    --accent: 174 40% 16%;
+    --accent-foreground: 171 64% 78%;
+    --destructive: 0 75% 62%;
+    --destructive-foreground: 222 47% 8%;
+    --success: 152 55% 52%;
+    --success-foreground: 222 47% 8%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 222 47% 8%;
+    --info: 213 90% 68%;
+    --info-foreground: 222 47% 8%;
+    --border: 220 20% 19%;
+    --input: 220 18% 25%;
+    --ring: 171 64% 52%;
+    --sidebar: 222 30% 9%;
+    --sidebar-foreground: 210 25% 90%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply min-h-screen bg-background font-sans text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  /* Consistent, clearly visible keyboard focus in both themes. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply tracking-tight;
+  }
+
+  /* Windows High Contrast / forced colours drops box-shadow rings: fall back to a real outline. */
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline: 2px solid CanvasText;
+      outline-offset: 2px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}

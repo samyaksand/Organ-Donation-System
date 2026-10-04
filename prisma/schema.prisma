@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         Role
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  admin        Admin?
+  donor        Donor?
+
+  @@index([role])
+  @@map("users")
+}
+
+model Admin {
+  id                  String              @id @default(cuid())
+  userId              String              @unique @map("user_id")
+  displayName         String              @map("display_name")
+  /// Marks the public demo admin account. Used to scope what the UI explains about this
+  /// account and to keep it out of any future admin-management features without special-casing
+  /// its email. Does not grant or remove any permission by itself.
+  isDemo              Boolean             @default(false) @map("is_demo")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedWithdrawals WithdrawalRequest[] @relation("WithdrawalReviewer")
+
+  @@map("admins")
+}
+
+model Donor {
+  id                 String              @id @default(cuid())
+  userId             String              @unique @map("user_id")
+  /// Human-facing Donor ID (legacy "Username", e.g. DN4K7Q2M)
+  donorCode          String              @unique @map("donor_code")
+  firstName          String              @map("first_name")
+  lastName           String              @map("last_name")
+  gender             Gender
+  dateOfBirth        DateTime            @map("date_of_birth") @db.Date
+  phone              String
+  address            String
+  city               String
+  state              String
+  personalDoctor     String?             @map("personal_doctor")
+  /// Registered/preferred hospital (legacy free-text donor.Hospital -> FK)
+  hospitalId         String?             @map("hospital_id")
+  medicalConditions  String?             @map("medical_conditions")
+  status             DonorStatus         @default(ACTIVE)
+  createdAt          DateTime            @default(now()) @map("created_at")
+  updatedAt          DateTime            @updatedAt @map("updated_at")
+  hospital           Hospital?           @relation(fields: [hospitalId], references: [id])
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nextOfKin          NextOfKin?
+  organs             Organ[]
+  withdrawalRequests WithdrawalRequest[]
+
+  @@index([hospitalId])
+  @@index([status])
+  @@index([city])
+  @@index([lastName, firstName])
+  @@map("donors")
+}
+
+model NextOfKin {
+  id           String   @id @default(cuid())
+  donorId      String   @unique @map("donor_id")
+  name         String
+  phone        String
+  relationship String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  donor        Donor    @relation(fields: [donorId], references: [id], onDelete: Cascade)
+
+  @@map("next_of_kin")
+}
+
+model Hospital {
+  id        String   @id @default(cuid())
+  name      String
+  city      String
+  state     String?
+  address   String
+  phone     String
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  donors    Donor[]
+  organs    Organ[]
+
+  @@unique([name, city])
+  @@index([city])
+  @@map("hospitals")
+}
+
+model Organ {
+  id              String      @id @default(cuid())
+  donorId         String      @map("donor_id")
+  hospitalId      String      @map("hospital_id")
+  organType       OrganType   @map("organ_type")
+  /// Free-text label, required when organType = OTHER (e.g. tissue name)
+  otherOrganName  String?     @map("other_organ_name")
+  status          OrganStatus @default(PENDING)
+  procurementDate DateTime    @map("procurement_date") @db.Date
+  notes           String?
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  donor           Donor       @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  hospital        Hospital    @relation(fields: [hospitalId], references: [id])
+
+  @@index([donorId])
+  @@index([hospitalId])
+  @@index([organType, status])
+  @@index([status])
+  @@map("organs")
+}
+
+model WithdrawalRequest {
+  id           String           @id @default(cuid())
+  donorId      String           @map("donor_id")
+  reason       String
+  status       WithdrawalStatus @default(PENDING)
+  adminNote    String?          @map("admin_note")
+  reviewedById String?          @map("reviewed_by_id")
+  reviewedAt   DateTime?        @map("reviewed_at")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+  donor        Donor            @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  reviewedBy   Admin?           @relation("WithdrawalReviewer", fields: [reviewedById], references: [id])
+
+  @@index([donorId, status])
+  @@index([status, createdAt])
+  @@map("withdrawal_requests")
+}
+
+enum Role {
+  DONOR
+  ADMIN
+  /// Full admin capabilities plus system recovery. Never created through the public API;
+  /// see server/scripts/create-super-admin.ts. There is no public sign-up or promotion path.
+  SUPER_ADMIN
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum DonorStatus {
+  ACTIVE
+  WITHDRAWN
+}
+
+enum OrganType {
+  KIDNEY
+  LIVER
+  HEART
+  LUNG
+  PANCREAS
+  CORNEA
+  OTHER
+}
+
+/// PENDING     — submitted by a donor, awaiting admin verification (never public)
+/// AVAILABLE   — verified/procured and available at the hospital
+/// UNAVAILABLE — no longer available (used, expired, or donor withdrew)
+enum OrganStatus {
+  PENDING
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RecoveryStatus {
+  SUCCEEDED
+  FAILED
+}
+
+/// Audit trail for demo-database recovery operations (System Recovery, Super Admin only).
+/// Never stores credentials, connection strings, backup paths, or raw error output that could
+/// contain any of those; see server/src/services/recovery.service.ts for what is recorded.
+model RecoveryLog {
+  id           String         @id @default(cuid())
+  initiatedBy  String         @map("initiated_by")
+  initiatorEmail String       @map("initiator_email")
+  status       RecoveryStatus
+  /// Short, operator-facing summary only (e.g. "Restored from snapshot" or "pg_restore exited
+  /// with a non-zero status"). Never raw command output, stack traces, or connection details.
+  message      String?
+  startedAt    DateTime       @default(now()) @map("started_at")
+  finishedAt   DateTime?      @map("finished_at")
+
+  @@index([startedAt])
+  @@map("recovery_logs")
+}
