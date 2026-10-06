@@ -131,7 +131,7 @@ const resetSchema = z
   .refine((d) => d.newPassword === d.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match' });
 type ResetValues = z.infer<typeof resetSchema>;
 
-/** Legacy admin "update Password" option — now hashed server-side via a dedicated endpoint. */
+/** Legacy admin "update Password" option - now hashed server-side via a dedicated endpoint. */
 export function ResetPasswordDialog({ donor, onOpenChange }: { donor: DonorListItem | null; onOpenChange: (open: boolean) => void }) {
   const reset = useAdminResetDonorPassword();
   const form = useForm<ResetValues>({ resolver: zodResolver(resetSchema), defaultValues: { newPassword: '', confirmPassword: '' } });

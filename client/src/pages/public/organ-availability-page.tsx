@@ -1,5 +1,6 @@
-import { FilterX, SearchX, ShieldCheck } from 'lucide-react';
+import { BarChart3, FilterX, SearchX, ShieldCheck } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
@@ -60,6 +61,13 @@ export function OrganAvailabilityPage() {
       <PageHeader
         title="Organ availability"
         description="Search organs recorded at participating hospitals by organ type and city. Contact the hospital directly for clinical enquiries."
+        actions={
+          <Button variant="outline" asChild>
+            <Link to="/analytics">
+              <BarChart3 aria-hidden="true" /> Explore analytics
+            </Link>
+          </Button>
+        }
       />
 
       <Card className="p-4 sm:p-5">

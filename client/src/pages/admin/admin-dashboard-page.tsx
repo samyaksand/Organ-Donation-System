@@ -37,7 +37,10 @@ export function AdminDashboardPage() {
               value={data?.donors.total}
               loading={isPending}
               icon={Users}
-              hint={data && `${formatNumber(data.donors.ACTIVE)} active · ${formatNumber(data.donors.WITHDRAWN)} withdrawn`}
+              hint={
+                data &&
+                `${formatNumber(data.donors.ACTIVE)} active · ${formatNumber(data.donors.PENDING)} pending · ${formatNumber(data.donors.WITHDRAWN)} withdrawn`
+              }
             />
             <StatCard
               label="Organs available"

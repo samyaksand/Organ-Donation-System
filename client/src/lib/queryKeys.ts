@@ -26,8 +26,33 @@ export const queryKeys = {
     donors: (params: object) => ['admin', 'donors', params] as const,
     donor: (id: string) => ['admin', 'donor', id] as const,
     withdrawals: (params: object) => ['admin', 'withdrawals', params] as const,
+    withdrawalHistory: (id: string) => ['admin', 'withdrawal-history', id] as const,
+  },
+  organRequests: {
+    all: ['organRequests'] as const,
+    list: (params: object) => ['organRequests', 'list', params] as const,
+    detail: (id: string) => ['organRequests', 'detail', id] as const,
+    history: (id: string) => ['organRequests', 'history', id] as const,
+  },
+  analytics: {
+    all: ['analytics'] as const,
+    overview: ['analytics', 'overview'] as const,
+    donors: (params: object) => ['analytics', 'donors', params] as const,
+    organs: ['analytics', 'organs'] as const,
+    hospitals: ['analytics', 'hospitals'] as const,
+    withdrawals: (params: object) => ['analytics', 'withdrawals', params] as const,
+    organRequests: (params: object) => ['analytics', 'organRequests', params] as const,
+    trends: (params: object) => ['analytics', 'trends', params] as const,
   },
   recovery: {
     status: ['recovery', 'status'] as const,
+  },
+  public: {
+    overview: ['public', 'overview'] as const,
+    organs: ['public', 'organs'] as const,
+    hospitals: ['public', 'hospitals'] as const,
+    concentration: ['public', 'concentration'] as const,
+    trends: ['public', 'trends'] as const,
+    breaches: ['public', 'breaches'] as const,
   },
 };

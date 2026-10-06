@@ -99,7 +99,7 @@ export async function registerDonor(input: RegisterInput): Promise<{ user: Sessi
 
 /**
  * Login for both roles (legacy /auth/logind by email and /auth/loginad by AdminID).
- * Admin passwords are now bcrypt hashes like everyone else's — the legacy plaintext comparison is gone.
+ * Admin passwords are now bcrypt hashes like everyone else's - the legacy plaintext comparison is gone.
  */
 export async function login(input: LoginInput): Promise<{ user: SessionUser; token: string }> {
   const user = await prisma.user.findUnique({

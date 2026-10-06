@@ -1,10 +1,12 @@
-import { Building2 } from 'lucide-react';
+import { BarChart3, Building2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { Pagination } from '@/components/common/pagination';
 import { SearchInput } from '@/components/common/search-input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { HospitalCard } from '@/features/hospitals/components/hospital-card';
@@ -32,6 +34,13 @@ export function HospitalDirectoryPage() {
       <PageHeader
         title="Hospital directory"
         description="Participating hospitals, their contact details and the organs currently recorded as available."
+        actions={
+          <Button variant="outline" asChild>
+            <Link to="/analytics">
+              <BarChart3 aria-hidden="true" /> View availability
+            </Link>
+          </Button>
+        }
       />
 
       <div className="flex flex-col gap-3 sm:flex-row">

@@ -94,6 +94,11 @@ describe('withdrawal requests', () => {
   it('admin approval withdraws the donor and takes their organs out of circulation', async () => {
     const cookie = authCookie(prisma, adminUser);
     prisma.withdrawalRequest.findUnique.mockResolvedValue({ status: 'PENDING', donorId: 'donor_1' });
+    prisma.donor.findUnique.mockResolvedValue({ status: 'ACTIVE' });
+    prisma.organ.findMany.mockResolvedValue([
+      { id: 'organ_1', status: 'AVAILABLE' },
+      { id: 'organ_2', status: 'PENDING' },
+    ]);
     prisma.withdrawalRequest.update.mockResolvedValue({
       id: 'w1',
       reason: 'Moving abroad permanently',
@@ -114,6 +119,19 @@ describe('withdrawal requests', () => {
       data: { status: 'UNAVAILABLE' },
     });
     expect(prisma.withdrawalRequest.update.mock.calls[0]![0].data).toMatchObject({ status: 'APPROVED', reviewedById: 'admin_1' });
+
+    // Workflow history: donor status change, each affected organ's status change, and the
+    // withdrawal request's own status change are all recorded.
+    const eventCalls = prisma.workflowEvent.create.mock.calls.map((c) => c[0].data);
+    expect(eventCalls).toContainEqual(
+      expect.objectContaining({ entityType: 'DONOR', entityId: 'donor_1', fromStatus: 'ACTIVE', toStatus: 'WITHDRAWN' }),
+    );
+    expect(eventCalls).toContainEqual(
+      expect.objectContaining({ entityType: 'ORGAN', entityId: 'organ_1', fromStatus: 'AVAILABLE', toStatus: 'UNAVAILABLE' }),
+    );
+    expect(eventCalls).toContainEqual(
+      expect.objectContaining({ entityType: 'WITHDRAWAL_REQUEST', entityId: 'w1', fromStatus: 'PENDING', toStatus: 'APPROVED' }),
+    );
   });
 
   it('a reviewed request cannot be reviewed again', async () => {
@@ -122,6 +140,34 @@ describe('withdrawal requests', () => {
     const res = await request(app).patch('/api/v1/withdrawals/w1').set('Cookie', cookie).send({ status: 'APPROVED' });
     expect(res.status).toBe(409);
     expect(prisma.donor.update).not.toHaveBeenCalled();
+  });
+
+  it('GET /withdrawals/:id/history returns the recorded WorkflowEvent timeline', async () => {
+    const cookie = authCookie(prisma, adminUser);
+    prisma.withdrawalRequest.findUnique.mockResolvedValue({ id: 'w1' });
+    prisma.workflowEvent.findMany.mockResolvedValue([
+      { id: 'e1', eventType: 'CREATED', fromStatus: null, toStatus: 'PENDING', actorId: null, createdAt: new Date() },
+      { id: 'e2', eventType: 'STATUS_CHANGED', fromStatus: 'PENDING', toStatus: 'APPROVED', actorId: 'admin_1', createdAt: new Date() },
+    ]);
+    prisma.admin.findMany.mockResolvedValue([{ id: 'admin_1', displayName: 'Test Admin' }]);
+
+    const res = await request(app).get('/api/v1/withdrawals/w1/history').set('Cookie', cookie);
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveLength(2);
+    expect(res.body.data[1]).toMatchObject({ toStatus: 'APPROVED', actor: 'Test Admin' });
+  });
+
+  it('GET /withdrawals/:id/history returns 404 for an unknown request', async () => {
+    const cookie = authCookie(prisma, adminUser);
+    prisma.withdrawalRequest.findUnique.mockResolvedValue(null);
+    const res = await request(app).get('/api/v1/withdrawals/missing/history').set('Cookie', cookie);
+    expect(res.status).toBe(404);
+  });
+
+  it('GET /withdrawals/:id/history is admin-only', async () => {
+    const cookie = authCookie(prisma, donorUser);
+    const res = await request(app).get('/api/v1/withdrawals/w1/history').set('Cookie', cookie);
+    expect(res.status).toBe(403);
   });
 });
 

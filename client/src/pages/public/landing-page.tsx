@@ -1,8 +1,9 @@
 import {
   ArrowRight,
+  BarChart3,
   Building2,
-  CheckCircle2,
   ClipboardCheck,
+  ClipboardList,
   GraduationCap,
   HeartHandshake,
   HeartPulse,
@@ -11,6 +12,7 @@ import {
   LogOut,
   Search,
   ShieldCheck,
+  Sparkles,
   UserCog,
   UserPlus,
 } from 'lucide-react';
@@ -54,14 +56,16 @@ const steps = [
 ];
 
 const features = [
-  { icon: Search, title: 'Search available organs', body: 'Filter by organ type, city and availability to find organs recorded at participating hospitals.' },
-  { icon: Building2, title: 'Browse hospitals', body: 'Look up participating hospitals, their contact details and what they currently have available.' },
-  { icon: UserPlus, title: 'Donor registration & profile', body: 'Register as a donor and manage your personal, medical and next-of-kin details at any time.' },
-  { icon: HeartPulse, title: 'Register & manage organs', body: 'Add the organs you are pledging and the hospital responsible for them, and keep them up to date.' },
-  { icon: ClipboardCheck, title: 'Track organ status', body: 'See the verification and availability status of every organ you have registered.' },
-  { icon: LogOut, title: 'Withdrawal requests', body: 'Submit a request to withdraw your registration and track its status until it is reviewed.' },
-  { icon: UserCog, title: 'Administration', body: 'Administrators manage donors, organs, hospitals and withdrawal requests from a dedicated console.' },
-  { icon: LayoutDashboard, title: 'Live registry figures', body: 'Dashboards for donors and administrators show real counts and activity from the registry.' },
+  { icon: Search, title: 'Organ Availability Explorer', body: 'Filter by organ type, city and availability to find organs recorded at participating hospitals. No account needed.', public: true },
+  { icon: Building2, title: 'Hospital Network', body: 'Browse participating hospitals, their contact details and what they currently have available.', public: true },
+  { icon: BarChart3, title: 'Public Analytics', body: 'Live, aggregate figures on organ availability, hospital activity and trends - open to everyone.', public: true },
+  { icon: Sparkles, title: 'Investigation', body: 'Ask an operational question in plain language and get an evidence-backed, AI-assisted answer grounded in real figures.', public: true },
+  { icon: ClipboardList, title: 'Hospital Organ Request Workflow', body: 'Hospitals request specific organs; administrators review, approve or decline, and the organ record updates automatically.' },
+  { icon: LayoutDashboard, title: 'Operational Dashboards', body: 'Management-grade KPIs, trends and deterministic bottleneck detection for administrators.' },
+  { icon: UserPlus, title: 'Donor Management', body: 'Register as a donor and manage your personal, medical and next-of-kin details at any time.' },
+  { icon: HeartPulse, title: 'Organ Management', body: 'Add the organs you are pledging and the hospital responsible for them, and keep them up to date.' },
+  { icon: LogOut, title: 'Withdrawal Workflow', body: 'Submit a request to withdraw your registration and track its status until it is reviewed.' },
+  { icon: UserCog, title: 'Role-Based Security', body: 'Donor, admin and super-admin roles each see exactly the data and actions appropriate to them.' },
 ];
 
 function Features() {
@@ -71,15 +75,18 @@ function Features() {
         id="features-heading"
         eyebrow="Features"
         title="What you can do with OrganFlow"
-        description="A single registry for donor registration, organ records, hospital information and administration."
+        description="Explore, analyze and investigate without an account - or register to manage your own donor pledge."
       />
       <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {features.map((feature) => (
           <li key={feature.title}>
             <Card className="h-full p-5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <feature.icon className="h-5 w-5" aria-hidden="true" />
-              </span>
+              <div className="flex items-start justify-between gap-2">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <feature.icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+                {feature.public && <Badge variant="success">No account needed</Badge>}
+              </div>
               <h3 className="mt-4 font-semibold">{feature.title}</h3>
               <p className="mt-1 text-sm text-muted-foreground">{feature.body}</p>
             </Card>
@@ -123,27 +130,37 @@ function Hero() {
       <div className="container grid items-center gap-10 py-14 lg:grid-cols-[1.15fr_1fr] lg:py-20">
         <div className="space-y-6">
           <Badge variant="default" className="gap-1.5">
-            <HeartHandshake aria-hidden="true" /> Multi-organ donor registry
+            <HeartHandshake aria-hidden="true" /> Organ Donation Operations & Intelligence Platform
           </Badge>
           <h1 className="text-3xl font-semibold leading-tight sm:text-4xl lg:text-[2.75rem]">
-            One decision can save several lives. Make yours count.
+            OrganFlow
           </h1>
           <p className="max-w-xl text-lg text-muted-foreground">
-            Register as an organ donor, manage your pledge and next-of-kin details, and help care teams find available organs
-            at participating hospitals.
+            Explore organ availability, hospitals and operational activity through structured data and analytics - then ask
+            an AI-assisted investigation tool to explain what it means. No account needed to look around.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-wrap gap-3">
             <Button size="lg" asChild>
-              <Link to="/register">
-                <UserPlus aria-hidden="true" /> Become a Donor
+              <Link to="/organs">
+                <Search aria-hidden="true" /> Explore Available Organs
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link to="/organs">
-                <Search aria-hidden="true" /> Find an Organ
+              <Link to="/analytics">
+                <BarChart3 aria-hidden="true" /> Explore Analytics
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/investigate">
+                <Sparkles aria-hidden="true" /> Investigate
               </Link>
             </Button>
           </div>
+          <Button size="lg" variant="secondary" asChild>
+            <Link to="/pledge">
+              <HeartHandshake aria-hidden="true" /> Pledge to Donate
+            </Link>
+          </Button>
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
             Donor identities are never shown in public searches.
@@ -151,28 +168,56 @@ function Hero() {
         </div>
 
         <Card className="p-6">
-          <h2 className="font-semibold">What you can do with a donor account</h2>
+          <h2 className="font-semibold">Everything you can explore right now</h2>
           <ul className="mt-4 space-y-3 text-sm">
             {[
-              'Keep personal, medical and doctor details up to date',
-              'Record which organs you pledge and at which hospital',
-              'Manage your next-of-kin contact',
-              'Track the status of each organ record',
-              'Request to withdraw your registration at any time',
-            ].map((item) => (
-              <li key={item} className="flex items-start gap-3">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
-                <span className="text-muted-foreground">{item}</span>
+              { icon: Search, text: 'Search live organ availability by type, city and hospital' },
+              { icon: Building2, text: 'Browse the participating hospital network' },
+              { icon: BarChart3, text: 'View public analytics on availability and trends' },
+              { icon: Sparkles, text: 'Ask the investigation tool an operational question' },
+              { icon: HeartHandshake, text: 'Make a quick, no-account pledge to donate' },
+            ].map(({ icon: Icon, text }) => (
+              <li key={text} className="flex items-start gap-3">
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+                <span className="text-muted-foreground">{text}</span>
               </li>
             ))}
           </ul>
           <div className="mt-6 border-t pt-4 text-sm text-muted-foreground">
-            Already registered?{' '}
+            Want a full donor account instead?{' '}
+            <Link to="/register" className="font-medium text-primary underline-offset-4 hover:underline">
+              Register as a donor
+            </Link>{' '}
+            or{' '}
             <Link to="/login" className="font-medium text-primary underline-offset-4 hover:underline">
-              Sign in to your account
+              sign in
             </Link>
+            .
           </div>
         </Card>
+      </div>
+    </section>
+  );
+}
+
+const flowSteps = ['Explore', 'Analyze', 'Investigate', 'Understand', 'Act'];
+
+function OperationalFlow() {
+  return (
+    <section aria-label="Explore, analyze, investigate, understand, act" className="border-b bg-muted/30 py-12">
+      <div className="container">
+        <ol className="flex flex-wrap items-center justify-center gap-x-3 gap-y-4 text-base font-semibold sm:text-lg">
+          {flowSteps.map((step, i) => (
+            <li key={step} className="flex items-center gap-3">
+              <span className={i === 0 ? 'text-primary' : 'text-foreground'}>{step}</span>
+              {i < flowSteps.length - 1 && <ArrowRight className="h-5 w-5 text-muted-foreground/50" aria-hidden="true" />}
+            </li>
+          ))}
+        </ol>
+        <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-muted-foreground">
+          Operational data becomes analytics, analytics becomes an investigation, and every investigation ends with a
+          human administrator making the final decision.
+        </p>
       </div>
     </section>
   );
@@ -292,10 +337,15 @@ function AvailabilityOverview() {
                 </Card>
               ))}
             </dl>
-            <div className="mt-6 text-center">
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Button asChild>
                 <Link to="/organs">
                   Search availability <ArrowRight aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/analytics">
+                  <BarChart3 aria-hidden="true" /> Explore analytics
                 </Link>
               </Button>
             </div>
@@ -378,6 +428,7 @@ export function LandingPage() {
     <>
       <AcademicOriginBanner />
       <Hero />
+      <OperationalFlow />
       <HowItWorks />
       <Features />
       <OrganTypes />

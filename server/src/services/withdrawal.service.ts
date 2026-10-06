@@ -8,6 +8,7 @@ import type {
 import { AppError } from '../utils/errors';
 import { buildPageMeta, pageArgs } from '../utils/response';
 import { adminWithdrawalSelect, toAdminWithdrawal, toWithdrawal, withdrawalSelect } from './mappers';
+import { getWorkflowHistory, recordCreated, recordStatusChanged } from './workflowEvent.service';
 
 export async function listOwn(donorId: string) {
   const rows = await prisma.withdrawalRequest.findMany({
@@ -35,10 +36,12 @@ export async function createOwn(donorId: string, input: CreateWithdrawalInput) {
       });
       if (pending) throw AppError.conflict('You already have a withdrawal request awaiting review.');
 
-      return tx.withdrawalRequest.create({
+      const request = await tx.withdrawalRequest.create({
         data: { donorId, reason: input.reason },
         select: withdrawalSelect,
       });
+      await recordCreated(tx, { entityType: 'WITHDRAWAL_REQUEST', entityId: request.id, toStatus: 'PENDING' });
+      return request;
     },
     { isolationLevel: 'Serializable' },
   );
@@ -87,14 +90,36 @@ export async function review(id: string, adminId: string, input: ReviewWithdrawa
     if (request.status !== 'PENDING') throw AppError.conflict('This request has already been reviewed.');
 
     if (input.status === 'APPROVED') {
+      const donorBefore = await tx.donor.findUnique({ where: { id: request.donorId }, select: { status: true } });
       await tx.donor.update({ where: { id: request.donorId }, data: { status: 'WITHDRAWN' } });
+      await recordStatusChanged(tx, {
+        entityType: 'DONOR',
+        entityId: request.donorId,
+        fromStatus: donorBefore?.status,
+        toStatus: 'WITHDRAWN',
+        actorId: adminId,
+      });
+
+      const affectedOrgans = await tx.organ.findMany({
+        where: { donorId: request.donorId, status: { in: ['PENDING', 'AVAILABLE'] } },
+        select: { id: true, status: true },
+      });
       await tx.organ.updateMany({
         where: { donorId: request.donorId, status: { in: ['PENDING', 'AVAILABLE'] } },
         data: { status: 'UNAVAILABLE' },
       });
+      for (const organ of affectedOrgans) {
+        await recordStatusChanged(tx, {
+          entityType: 'ORGAN',
+          entityId: organ.id,
+          fromStatus: organ.status,
+          toStatus: 'UNAVAILABLE',
+          actorId: adminId,
+        });
+      }
     }
 
-    return tx.withdrawalRequest.update({
+    const reviewed = await tx.withdrawalRequest.update({
       where: { id },
       data: {
         status: input.status,
@@ -104,6 +129,21 @@ export async function review(id: string, adminId: string, input: ReviewWithdrawa
       },
       select: adminWithdrawalSelect,
     });
+    await recordStatusChanged(tx, {
+      entityType: 'WITHDRAWAL_REQUEST',
+      entityId: id,
+      fromStatus: 'PENDING',
+      toStatus: input.status,
+      actorId: adminId,
+    });
+    return reviewed;
   });
   return toAdminWithdrawal(updated);
+}
+
+/** Admin-only workflow timeline for one withdrawal request - reuses the shared WorkflowEvent history. */
+export async function getHistory(id: string) {
+  const exists = await prisma.withdrawalRequest.findUnique({ where: { id }, select: { id: true } });
+  if (!exists) throw AppError.notFound('Withdrawal request');
+  return getWorkflowHistory('WITHDRAWAL_REQUEST', id);
 }

@@ -19,6 +19,7 @@ import {
   toOwnOrgan,
   toPublicOrgan,
 } from './mappers';
+import { recordCreated, recordStatusChanged } from './workflowEvent.service';
 
 /** Statuses the public may ever see. PENDING (unverified) organs are never public. */
 const PUBLIC_STATUSES: OrganStatus[] = ['AVAILABLE', 'UNAVAILABLE'];
@@ -98,6 +99,7 @@ export async function createOwn(donorId: string, input: DonorCreateOrganInput) {
     },
     select: ownOrganSelect,
   });
+  await recordCreated(prisma, { entityType: 'ORGAN', entityId: organ.id, toStatus: 'PENDING' });
   return toOwnOrgan(organ);
 }
 
@@ -153,11 +155,12 @@ export async function createForAdmin(input: AdminCreateOrganInput) {
     },
     select: adminOrganSelect,
   });
+  await recordCreated(prisma, { entityType: 'ORGAN', entityId: organ.id, toStatus: organ.status });
   return toAdminOrgan(organ);
 }
 
-export async function updateForAdmin(organId: string, input: AdminUpdateOrganInput) {
-  const existing = await prisma.organ.findUnique({ where: { id: organId }, select: { organType: true } });
+export async function updateForAdmin(organId: string, input: AdminUpdateOrganInput, actorId: string | null) {
+  const existing = await prisma.organ.findUnique({ where: { id: organId }, select: { organType: true, status: true } });
   if (!existing) throw AppError.notFound('Organ');
   if (input.hospitalId) await assertHospital(input.hospitalId);
 
@@ -174,6 +177,15 @@ export async function updateForAdmin(organId: string, input: AdminUpdateOrganInp
     },
     select: adminOrganSelect,
   });
+  if (input.status) {
+    await recordStatusChanged(prisma, {
+      entityType: 'ORGAN',
+      entityId: organ.id,
+      fromStatus: existing.status,
+      toStatus: input.status,
+      actorId,
+    });
+  }
   return toAdminOrgan(organ);
 }
 

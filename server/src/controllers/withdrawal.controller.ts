@@ -23,3 +23,8 @@ export async function review(req: Request, res: Response) {
   const { id } = getParams(req, idParam);
   sendData(res, await withdrawalService.review(id, adminIdOf(req), getBody(req, reviewWithdrawalSchema)));
 }
+
+export async function history(req: Request, res: Response) {
+  const { id } = getParams(req, idParam);
+  sendData(res, await withdrawalService.getHistory(id));
+}

@@ -37,3 +37,11 @@ export function useReviewWithdrawal() {
     },
   });
 }
+
+export function useWithdrawalHistory(id: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.admin.withdrawalHistory(id ?? ''),
+    queryFn: () => withdrawalsApi.history(id!),
+    enabled: Boolean(id),
+  });
+}

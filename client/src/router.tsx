@@ -12,6 +12,9 @@ const lazyPage = <T extends Record<string, React.ComponentType>>(loader: () => P
 
 const OrganAvailabilityPage = lazyPage(() => import('@/pages/public/organ-availability-page'), 'OrganAvailabilityPage');
 const HospitalDirectoryPage = lazyPage(() => import('@/pages/public/hospital-directory-page'), 'HospitalDirectoryPage');
+const PublicAnalyticsPage = lazyPage(() => import('@/pages/public/analytics-page'), 'PublicAnalyticsPage');
+const InvestigatePage = lazyPage(() => import('@/pages/public/investigate-page'), 'InvestigatePage');
+const PledgePage = lazyPage(() => import('@/pages/public/pledge-page'), 'PledgePage');
 const DonorLoginPage = lazyPage(() => import('@/pages/auth/donor-login-page'), 'DonorLoginPage');
 const AdminLoginPage = lazyPage(() => import('@/pages/auth/admin-login-page'), 'AdminLoginPage');
 const RegisterPage = lazyPage(() => import('@/pages/auth/register-page'), 'RegisterPage');
@@ -24,10 +27,20 @@ const DonorAddOrganPage = lazyPage(() => import('@/pages/donor/donor-add-organ-p
 const DonorProfilePage = lazyPage(() => import('@/pages/donor/donor-profile-page'), 'DonorProfilePage');
 const DonorWithdrawalPage = lazyPage(() => import('@/pages/donor/donor-withdrawal-page'), 'DonorWithdrawalPage');
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/admin-dashboard-page'), 'AdminDashboardPage');
+const AdminAnalyticsPage = lazyPage(() => import('@/pages/admin/admin-analytics-page'), 'AdminAnalyticsPage');
+const AdminOperationsIntelligencePage = lazyPage(
+  () => import('@/pages/admin/admin-operations-intelligence-page'),
+  'AdminOperationsIntelligencePage',
+);
 const AdminDonorsPage = lazyPage(() => import('@/pages/admin/admin-donors-page'), 'AdminDonorsPage');
 const AdminOrgansPage = lazyPage(() => import('@/pages/admin/admin-organs-page'), 'AdminOrgansPage');
 const AdminHospitalsPage = lazyPage(() => import('@/pages/admin/admin-hospitals-page'), 'AdminHospitalsPage');
 const AdminWithdrawalsPage = lazyPage(() => import('@/pages/admin/admin-withdrawals-page'), 'AdminWithdrawalsPage');
+const AdminOrganRequestsPage = lazyPage(() => import('@/pages/admin/admin-organ-requests-page'), 'AdminOrganRequestsPage');
+const AdminOrganRequestDetailPage = lazyPage(
+  () => import('@/pages/admin/admin-organ-request-detail-page'),
+  'AdminOrganRequestDetailPage',
+);
 const SystemRecoveryPage = lazyPage(() => import('@/pages/admin/system-recovery-page'), 'SystemRecoveryPage');
 
 export const router = createBrowserRouter([
@@ -40,6 +53,9 @@ export const router = createBrowserRouter([
           { index: true, element: <LandingPage /> },
           { path: 'organs', element: <OrganAvailabilityPage /> },
           { path: 'hospitals', element: <HospitalDirectoryPage /> },
+          { path: 'analytics', element: <PublicAnalyticsPage /> },
+          { path: 'investigate', element: <InvestigatePage /> },
+          { path: 'pledge', element: <PledgePage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },
@@ -75,10 +91,14 @@ export const router = createBrowserRouter([
             element: <AdminConsoleLayout />,
             children: [
               { index: true, element: <AdminDashboardPage /> },
+              { path: 'analytics', element: <AdminAnalyticsPage /> },
+              { path: 'operations-intelligence', element: <AdminOperationsIntelligencePage /> },
               { path: 'donors', element: <AdminDonorsPage /> },
               { path: 'organs', element: <AdminOrgansPage /> },
               { path: 'hospitals', element: <AdminHospitalsPage /> },
               { path: 'withdrawals', element: <AdminWithdrawalsPage /> },
+              { path: 'organ-requests', element: <AdminOrganRequestsPage /> },
+              { path: 'organ-requests/:id', element: <AdminOrganRequestDetailPage /> },
               {
                 path: 'recovery',
                 element: <RequireRole allow="SUPER_ADMIN" />,

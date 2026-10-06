@@ -99,6 +99,6 @@ describe('formatDate', () => {
   it('does not shift date-only values across timezones', () => {
     expect(formatDate('2026-08-01')).toMatch(/2026/);
     expect(formatDate('2026-08-01')).toMatch(/1/);
-    expect(formatDate(null)).toBe('—');
+    expect(formatDate(null)).toBe('-');
   });
 });

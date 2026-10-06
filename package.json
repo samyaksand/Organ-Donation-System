@@ -2,7 +2,7 @@
   "name": "organ-donation-system",
   "version": "2.0.0",
   "private": true,
-  "description": "OrganFlow — Organ Donation Network & Intelligence Platform. React + Express + Prisma/PostgreSQL",
+  "description": "OrganFlow - Organ Donation Network & Intelligence Platform. React + Express + Prisma/PostgreSQL",
   "license": "GPL-3.0",
   "workspaces": [
     "server",

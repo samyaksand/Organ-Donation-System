@@ -1,4 +1,4 @@
-import type { AdminWithdrawal, Withdrawal, WithdrawalStatus } from '@/types/api';
+import type { AdminWithdrawal, Withdrawal, WithdrawalStatus, WorkflowEvent } from '@/types/api';
 import { api } from './client';
 
 export interface WithdrawalListParams {
@@ -18,4 +18,5 @@ export const withdrawalsApi = {
   create: (reason: string) => api.post<Withdrawal>('/withdrawals', { reason }),
   list: (params: WithdrawalListParams) => api.getPage<AdminWithdrawal>('/withdrawals', { ...params }),
   review: (id: string, payload: ReviewWithdrawalPayload) => api.patch<AdminWithdrawal>(`/withdrawals/${id}`, payload),
+  history: (id: string) => api.get<WorkflowEvent[]>(`/withdrawals/${id}/history`),
 };

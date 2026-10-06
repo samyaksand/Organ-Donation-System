@@ -1,4 +1,4 @@
-import type { DonorStatus, Gender, OrganStatus, OrganType, WithdrawalStatus } from '@/types/api';
+import type { DonorStatus, Gender, OrganRequestStatus, OrganStatus, OrganType, WithdrawalStatus } from '@/types/api';
 
 export const ORGAN_TYPE_LABELS: Record<OrganType, string> = {
   KIDNEY: 'Kidney',
@@ -32,7 +32,15 @@ export const WITHDRAWAL_STATUS_LABELS: Record<WithdrawalStatus, string> = {
   REJECTED: 'Declined',
 };
 
+export const ORGAN_REQUEST_STATUS_LABELS: Record<OrganRequestStatus, string> = {
+  PENDING: 'Awaiting review',
+  APPROVED: 'Approved',
+  DECLINED: 'Declined',
+  CANCELLED: 'Cancelled',
+};
+
 export const DONOR_STATUS_LABELS: Record<DonorStatus, string> = {
+  PENDING: 'Pending verification',
   ACTIVE: 'Active',
   WITHDRAWN: 'Withdrawn',
 };

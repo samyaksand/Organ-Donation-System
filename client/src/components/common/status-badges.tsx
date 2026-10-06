@@ -1,7 +1,7 @@
-import { CheckCircle2, CircleSlash, Clock, UserCheck, UserX, XCircle } from 'lucide-react';
+import { Ban, CheckCircle2, CircleSlash, Clock, UserCheck, UserX, XCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { DONOR_STATUS_LABELS, ORGAN_STATUS_LABELS, WITHDRAWAL_STATUS_LABELS } from '@/lib/domain';
-import type { DonorStatus, OrganStatus, WithdrawalStatus } from '@/types/api';
+import { DONOR_STATUS_LABELS, ORGAN_REQUEST_STATUS_LABELS, ORGAN_STATUS_LABELS, WITHDRAWAL_STATUS_LABELS } from '@/lib/domain';
+import type { DonorStatus, OrganRequestStatus, OrganStatus, WithdrawalStatus } from '@/types/api';
 
 /* Every status badge pairs colour with an icon and a text label (never colour alone). */
 
@@ -35,16 +35,33 @@ export function WithdrawalStatusBadge({ status }: { status: WithdrawalStatus }) 
   );
 }
 
-export function DonorStatusBadge({ status }: { status: DonorStatus }) {
-  return status === 'ACTIVE' ? (
-    <Badge variant="success">
-      <UserCheck aria-hidden="true" />
-      {DONOR_STATUS_LABELS.ACTIVE}
+export function OrganRequestStatusBadge({ status }: { status: OrganRequestStatus }) {
+  const config = {
+    PENDING: { variant: 'warning', Icon: Clock },
+    APPROVED: { variant: 'success', Icon: CheckCircle2 },
+    DECLINED: { variant: 'destructive', Icon: XCircle },
+    CANCELLED: { variant: 'muted', Icon: Ban },
+  } as const;
+  const { variant, Icon } = config[status];
+  return (
+    <Badge variant={variant}>
+      <Icon aria-hidden="true" />
+      {ORGAN_REQUEST_STATUS_LABELS[status]}
     </Badge>
-  ) : (
-    <Badge variant="muted">
-      <UserX aria-hidden="true" />
-      {DONOR_STATUS_LABELS.WITHDRAWN}
+  );
+}
+
+export function DonorStatusBadge({ status }: { status: DonorStatus }) {
+  const config = {
+    PENDING: { variant: 'warning', Icon: Clock },
+    ACTIVE: { variant: 'success', Icon: UserCheck },
+    WITHDRAWN: { variant: 'muted', Icon: UserX },
+  } as const;
+  const { variant, Icon } = config[status];
+  return (
+    <Badge variant={variant}>
+      <Icon aria-hidden="true" />
+      {DONOR_STATUS_LABELS[status]}
     </Badge>
   );
 }

@@ -12,9 +12,11 @@ import { cn } from '@/lib/utils';
 import { UserMenu } from './user-menu';
 
 const links = [
-  { to: '/organs', label: 'Organ availability' },
+  { to: '/', label: 'Explore' },
+  { to: '/organs', label: 'Organs' },
   { to: '/hospitals', label: 'Hospitals' },
-  { to: '/#how-it-works', label: 'How it works' },
+  { to: '/analytics', label: 'Analytics' },
+  { to: '/investigate', label: 'Investigate' },
 ];
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>

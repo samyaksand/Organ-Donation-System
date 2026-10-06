@@ -70,8 +70,8 @@ export function DonorDetailSheet({ donorId, onOpenChange }: { donorId: string | 
               <Separator />
               <Section title="Medical & care">
                 <dl className="grid grid-cols-2 gap-4">
-                  <Field label="Registered hospital">{data.hospital ? `${data.hospital.name}, ${data.hospital.city}` : '—'}</Field>
-                  <Field label="Personal doctor">{data.personalDoctor ?? '—'}</Field>
+                  <Field label="Registered hospital">{data.hospital ? `${data.hospital.name}, ${data.hospital.city}` : '-'}</Field>
+                  <Field label="Personal doctor">{data.personalDoctor ?? '-'}</Field>
                   <div className="col-span-2">
                     <Field label="Medical conditions">
                       <span className="whitespace-pre-line">{data.medicalConditions ?? 'None recorded'}</span>
@@ -85,7 +85,7 @@ export function DonorDetailSheet({ donorId, onOpenChange }: { donorId: string | 
                   <dl className="grid grid-cols-2 gap-4">
                     <Field label="Name">{data.nextOfKin.name}</Field>
                     <Field label="Phone">{data.nextOfKin.phone}</Field>
-                    <Field label="Relationship">{data.nextOfKin.relationship ?? '—'}</Field>
+                    <Field label="Relationship">{data.nextOfKin.relationship ?? '-'}</Field>
                   </dl>
                 ) : (
                   <p className="text-sm text-muted-foreground">Not provided.</p>

@@ -23,17 +23,19 @@ model User {
 }
 
 model Admin {
-  id                  String              @id @default(cuid())
-  userId              String              @unique @map("user_id")
-  displayName         String              @map("display_name")
+  id                     String              @id @default(cuid())
+  userId                 String              @unique @map("user_id")
+  displayName            String              @map("display_name")
   /// Marks the public demo admin account. Used to scope what the UI explains about this
   /// account and to keep it out of any future admin-management features without special-casing
   /// its email. Does not grant or remove any permission by itself.
-  isDemo              Boolean             @default(false) @map("is_demo")
-  createdAt           DateTime            @default(now()) @map("created_at")
-  updatedAt           DateTime            @updatedAt @map("updated_at")
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewedWithdrawals WithdrawalRequest[] @relation("WithdrawalReviewer")
+  isDemo                 Boolean             @default(false) @map("is_demo")
+  createdAt              DateTime            @default(now()) @map("created_at")
+  updatedAt              DateTime            @updatedAt @map("updated_at")
+  user                   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewedWithdrawals    WithdrawalRequest[] @relation("WithdrawalReviewer")
+  requestedOrganRequests OrganRequest[]      @relation("OrganRequestRequester")
+  reviewedOrganRequests  OrganRequest[]      @relation("OrganRequestReviewer")
 
   @@map("admins")
 }
@@ -55,6 +57,9 @@ model Donor {
   /// Registered/preferred hospital (legacy free-text donor.Hospital -> FK)
   hospitalId         String?             @map("hospital_id")
   medicalConditions  String?             @map("medical_conditions")
+  /// Nullable: not collected by the original registration form. New analytics dimension only
+  /// (donor/organ compatibility matching is explicitly out of scope for this phase).
+  bloodType          BloodType?          @map("blood_type")
   status             DonorStatus         @default(ACTIVE)
   createdAt          DateTime            @default(now()) @map("created_at")
   updatedAt          DateTime            @updatedAt @map("updated_at")
@@ -68,6 +73,7 @@ model Donor {
   @@index([status])
   @@index([city])
   @@index([lastName, firstName])
+  @@index([bloodType])
   @@map("donors")
 }
 
@@ -85,17 +91,18 @@ model NextOfKin {
 }
 
 model Hospital {
-  id        String   @id @default(cuid())
-  name      String
-  city      String
-  state     String?
-  address   String
-  phone     String
-  email     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-  donors    Donor[]
-  organs    Organ[]
+  id            String         @id @default(cuid())
+  name          String
+  city          String
+  state         String?
+  address       String
+  phone         String
+  email         String?
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  donors        Donor[]
+  organs        Organ[]
+  organRequests OrganRequest[]
 
   @@unique([name, city])
   @@index([city])
@@ -103,19 +110,20 @@ model Hospital {
 }
 
 model Organ {
-  id              String      @id @default(cuid())
-  donorId         String      @map("donor_id")
-  hospitalId      String      @map("hospital_id")
-  organType       OrganType   @map("organ_type")
+  id              String         @id @default(cuid())
+  donorId         String         @map("donor_id")
+  hospitalId      String         @map("hospital_id")
+  organType       OrganType      @map("organ_type")
   /// Free-text label, required when organType = OTHER (e.g. tissue name)
-  otherOrganName  String?     @map("other_organ_name")
-  status          OrganStatus @default(PENDING)
-  procurementDate DateTime    @map("procurement_date") @db.Date
+  otherOrganName  String?        @map("other_organ_name")
+  status          OrganStatus    @default(PENDING)
+  procurementDate DateTime       @map("procurement_date") @db.Date
   notes           String?
-  createdAt       DateTime    @default(now()) @map("created_at")
-  updatedAt       DateTime    @updatedAt @map("updated_at")
-  donor           Donor       @relation(fields: [donorId], references: [id], onDelete: Cascade)
-  hospital        Hospital    @relation(fields: [hospitalId], references: [id])
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+  donor           Donor          @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  hospital        Hospital       @relation(fields: [hospitalId], references: [id])
+  requests        OrganRequest[]
 
   @@index([donorId])
   @@index([hospitalId])
@@ -142,6 +150,48 @@ model WithdrawalRequest {
   @@map("withdrawal_requests")
 }
 
+/// A hospital's request to receive a specific AVAILABLE organ. There is no hospital login in
+/// this system (see Role enum), so requests are entered by an admin on the requesting
+/// hospital's behalf — the same model already used for every other hospital-facing record
+/// (Organ, Hospital itself). Explicitly NOT a recipient/compatibility/matching model: it
+/// references one concrete Organ row, never a patient, and carries no medical criteria.
+///
+/// PENDING   — submitted, awaiting admin decision.
+/// APPROVED  — admin approved; the organ is transactionally marked UNAVAILABLE (allocated).
+/// DECLINED  — admin declined; the organ's availability is left untouched.
+/// CANCELLED — withdrawn before a decision (also leaves the organ untouched).
+model OrganRequest {
+  id            String             @id @default(cuid())
+  organId       String             @map("organ_id")
+  hospitalId    String             @map("hospital_id")
+  status        OrganRequestStatus @default(PENDING)
+  /// Free-text operational context from the requesting hospital (e.g. urgency, ward).
+  notes         String?
+  /// Required when status = DECLINED; null otherwise.
+  declineReason String?            @map("decline_reason")
+  requestedById String?            @map("requested_by_id")
+  reviewedById  String?            @map("reviewed_by_id")
+  reviewedAt    DateTime?          @map("reviewed_at")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+  organ         Organ              @relation(fields: [organId], references: [id], onDelete: Cascade)
+  hospital      Hospital           @relation(fields: [hospitalId], references: [id])
+  requestedBy   Admin?             @relation("OrganRequestRequester", fields: [requestedById], references: [id])
+  reviewedBy    Admin?             @relation("OrganRequestReviewer", fields: [reviewedById], references: [id])
+
+  @@index([organId, status])
+  @@index([hospitalId, status])
+  @@index([status, createdAt])
+  @@map("organ_requests")
+}
+
+enum OrganRequestStatus {
+  PENDING
+  APPROVED
+  DECLINED
+  CANCELLED
+}
+
 enum Role {
   DONOR
   ADMIN
@@ -156,9 +206,29 @@ enum Gender {
   OTHER
 }
 
+/// PENDING    — registered but not yet verified by an administrator (mirrors Organ's own
+///              PENDING -> AVAILABLE verification step). Not currently set by the public
+///              registration flow (new donors still default to ACTIVE, unchanged); exists so
+///              a donor-level verification step can be introduced later without another
+///              migration, and so "pending donors" is a real, queryable analytics dimension
+///              rather than an invented one.
+/// ACTIVE     — registered and in good standing.
+/// WITHDRAWN  — withdrawal request approved; see WithdrawalRequest.
 enum DonorStatus {
+  PENDING
   ACTIVE
   WITHDRAWN
+}
+
+enum BloodType {
+  A_POS
+  A_NEG
+  B_POS
+  B_NEG
+  AB_POS
+  AB_NEG
+  O_POS
+  O_NEG
 }
 
 enum OrganType {
@@ -195,16 +265,74 @@ enum RecoveryStatus {
 /// Never stores credentials, connection strings, backup paths, or raw error output that could
 /// contain any of those; see server/src/services/recovery.service.ts for what is recorded.
 model RecoveryLog {
-  id           String         @id @default(cuid())
-  initiatedBy  String         @map("initiated_by")
-  initiatorEmail String       @map("initiator_email")
-  status       RecoveryStatus
+  id             String         @id @default(cuid())
+  initiatedBy    String         @map("initiated_by")
+  initiatorEmail String         @map("initiator_email")
+  status         RecoveryStatus
   /// Short, operator-facing summary only (e.g. "Restored from snapshot" or "pg_restore exited
   /// with a non-zero status"). Never raw command output, stack traces, or connection details.
-  message      String?
-  startedAt    DateTime       @default(now()) @map("started_at")
-  finishedAt   DateTime?      @map("finished_at")
+  message        String?
+  startedAt      DateTime       @default(now()) @map("started_at")
+  finishedAt     DateTime?      @map("finished_at")
 
   @@index([startedAt])
   @@map("recovery_logs")
+}
+
+enum WorkflowEntityType {
+  DONOR
+  ORGAN
+  WITHDRAWAL_REQUEST
+  ORGAN_REQUEST
+}
+
+enum WorkflowEventType {
+  CREATED
+  STATUS_CHANGED
+}
+
+/// Lightweight workflow history for the status-bearing entities (Donor, Organ,
+/// WithdrawalRequest, OrganRequest). Exists to make processing-time, pending-age and bottleneck analytics
+/// (see server/src/services/analytics.service.ts) derivable from real recorded transitions
+/// instead of only the current `updatedAt`, which cannot show *when* an intermediate state was
+/// entered if the entity has changed status more than once. Deliberately NOT a general-purpose
+/// event-sourcing log: it only ever records a status actually changing (or a row being created),
+/// written by the same services that already perform those transitions, never a new/parallel
+/// write path. `actorId` is the acting Admin's id (matching WithdrawalRequest.reviewedById)
+/// when an admin performed the transition, null for a donor's own self-service action (e.g.
+/// submitting their own withdrawal request or registering their own organ).
+model WorkflowEvent {
+  id         String             @id @default(cuid())
+  entityType WorkflowEntityType @map("entity_type")
+  entityId   String             @map("entity_id")
+  eventType  WorkflowEventType  @map("event_type")
+  fromStatus String?            @map("from_status")
+  toStatus   String?            @map("to_status")
+  actorId    String?            @map("actor_id")
+  createdAt  DateTime           @default(now()) @map("created_at")
+
+  @@index([entityType, entityId])
+  @@index([entityType, eventType, createdAt])
+  @@index([createdAt])
+  @@map("workflow_events")
+}
+
+/// A lightweight, public, no-account "intent to donate" record — deliberately NOT a Donor.
+/// Collects only what's needed to issue a pledge certificate: no medical history, no next-of-kin,
+/// no government ID, no detailed address. Never automatically creates a User/Donor account, and
+/// has no FK to either — a pledge and a full donor registration are two separate concepts by
+/// design. `referenceId` is the human-facing id shown on the certificate (format: PLG-XXXXXXXX).
+model Pledge {
+  id              String    @id @default(cuid())
+  referenceId     String    @unique @map("reference_id")
+  fullName        String    @map("full_name")
+  email           String
+  city            String
+  organPreference OrganType @map("organ_preference")
+  consentedAt     DateTime  @map("consented_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("pledges")
 }

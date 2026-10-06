@@ -1,4 +1,4 @@
-import { HeartPulse, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ClipboardPlus, HeartPulse, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -16,6 +16,7 @@ import { OrganStatusBadge } from '@/components/common/status-badges';
 import { Button } from '@/components/ui/button';
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { useHospitalOptions } from '@/features/hospitals/hooks';
+import { OrganRequestFormDialog } from '@/features/organ-requests/components/organ-request-form-dialog';
 import { OrganFormDialog } from '@/features/organs/components/organ-form-dialog';
 import { useAdminDeleteOrgan, useAdminOrgans } from '@/features/organs/hooks';
 import { useDebounce } from '@/hooks/use-debounce';
@@ -45,6 +46,7 @@ export function AdminOrgansPage() {
   const [creating, setCreating] = useState(Boolean(addFor));
   const [editing, setEditing] = useState<AdminOrgan | null>(null);
   const [deleting, setDeleting] = useState<AdminOrgan | null>(null);
+  const [requesting, setRequesting] = useState<AdminOrgan | null>(null);
   const remove = useAdminDeleteOrgan();
 
   const closeCreate = (open: boolean) => {
@@ -149,7 +151,7 @@ export function AdminOrgansPage() {
           allLabel="All hospitals"
           value={values.hospitalId}
           onChange={(v) => setFilter('hospitalId', v)}
-          options={(hospitals.data ?? []).map((h) => ({ value: h.id, label: `${h.name} — ${h.city}` }))}
+          options={(hospitals.data ?? []).map((h) => ({ value: h.id, label: `${h.name} - ${h.city}` }))}
           className="lg:w-56"
         />
       </div>
@@ -177,6 +179,11 @@ export function AdminOrgansPage() {
               <DropdownMenuItem onSelect={() => setEditing(o)}>
                 <Pencil aria-hidden="true" /> Edit / change status
               </DropdownMenuItem>
+              {o.status === 'AVAILABLE' && (
+                <DropdownMenuItem onSelect={() => setRequesting(o)}>
+                  <ClipboardPlus aria-hidden="true" /> Request for a hospital
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem destructive onSelect={() => setDeleting(o)}>
                 <Trash2 aria-hidden="true" /> Delete record
@@ -203,6 +210,11 @@ export function AdminOrgansPage() {
 
       <OrganFormDialog open={creating} onOpenChange={closeCreate} initialDonorCode={addFor} />
       <OrganFormDialog open={Boolean(editing)} onOpenChange={(open) => !open && setEditing(null)} organ={editing} />
+      <OrganRequestFormDialog
+        open={Boolean(requesting)}
+        onOpenChange={(open) => !open && setRequesting(null)}
+        initial={requesting ? { hospitalId: requesting.hospital.id, organId: requesting.id } : undefined}
+      />
       <ConfirmDialog
         open={Boolean(deleting)}
         onOpenChange={(open) => !open && setDeleting(null)}

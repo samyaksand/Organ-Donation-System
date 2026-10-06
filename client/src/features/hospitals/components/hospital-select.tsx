@@ -56,7 +56,7 @@ export function HospitalSelect({ control, value, onChange, allowNone, placeholde
         )}
         {data.map((h) => (
           <SelectItem key={h.id} value={h.id}>
-            {h.name} — {h.city}
+            {h.name} - {h.city}
           </SelectItem>
         ))}
       </SelectContent>

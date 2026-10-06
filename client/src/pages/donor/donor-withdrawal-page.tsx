@@ -158,7 +158,7 @@ export function DonorWithdrawalPage() {
                       {w.reviewedAt && (
                         <p className="text-xs text-muted-foreground">
                           Reviewed {formatDateTime(w.reviewedAt)}
-                          {w.adminNote ? ` — “${w.adminNote}”` : ''}
+                          {w.adminNote ? ` - “${w.adminNote}”` : ''}
                         </p>
                       )}
                     </li>

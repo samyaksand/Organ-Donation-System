@@ -33,6 +33,25 @@ const envSchema = z.object({
   // Directory holding the known-good demo snapshot, created by `npm run demo:snapshot`.
   // Deliberately outside PostgreSQL itself (see docs/demo-recovery.md).
   DEMO_BACKUP_DIR: z.string().default('./backups'),
+  // Operations Intelligence Agent (admin + public, read-only). All three are optional: a
+  // deployment with none configured still runs normally, the agent endpoints just report a
+  // clear "unavailable" error. When more than one is set, agent/providers.ts fails over between
+  // them in the fixed order Gemini -> Groq -> OpenRouter.
+  GEMINI_API_KEY: z.string().optional(),
+  GROQ_API_KEY: z.string().optional(),
+  OPENROUTER_API_KEY: z.string().optional(),
+  OPENROUTER_MODEL: z.string().default('openrouter/free'),
+  // Per-admin-user request budget for the admin agent endpoint (expensive LLM calls).
+  AGENT_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(10),
+  AGENT_RATE_LIMIT_WINDOW_MIN: z.coerce.number().int().positive().default(15),
+  // Per-IP budget for the public (unauthenticated) analytics endpoints. The public Analytics
+  // page fires ~6 parallel queries per load (overview/organs/hospitals/concentration/trends/
+  // breaches), so this must be generous enough for normal repeated browsing - not just a single
+  // page view - while still bounding abuse. 240 per 15 min ~= 40 page loads per IP.
+  PUBLIC_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(240),
+  PUBLIC_RATE_LIMIT_WINDOW_MIN: z.coerce.number().int().positive().default(15),
+  PUBLIC_AGENT_RATE_LIMIT_MAX: z.coerce.number().int().positive().default(5),
+  PUBLIC_AGENT_RATE_LIMIT_WINDOW_MIN: z.coerce.number().int().positive().default(15),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -62,6 +81,11 @@ export const env = {
     .map((o) => o.trim())
     .filter(Boolean),
   demoBackupDir: path.resolve(__dirname, '../../../', raw.DEMO_BACKUP_DIR),
+  hasGemini: Boolean(raw.GEMINI_API_KEY),
+  hasGroq: Boolean(raw.GROQ_API_KEY),
+  hasOpenRouter: Boolean(raw.OPENROUTER_API_KEY),
+  openRouterModel: raw.OPENROUTER_MODEL,
+  hasAnyAgentProvider: Boolean(raw.GEMINI_API_KEY || raw.GROQ_API_KEY || raw.OPENROUTER_API_KEY),
 } as const;
 
 export type Env = typeof env;

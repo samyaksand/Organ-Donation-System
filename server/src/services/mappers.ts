@@ -195,6 +195,57 @@ export function toWithdrawal(w: WithdrawalRow) {
   };
 }
 
+// ---------------------------------------------------------------- Organ requests
+
+export const organRequestSelect = {
+  id: true,
+  status: true,
+  notes: true,
+  declineReason: true,
+  reviewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+  organ: {
+    select: {
+      id: true,
+      organType: true,
+      otherOrganName: true,
+      status: true,
+      procurementDate: true,
+      donor: { select: { id: true, donorCode: true } },
+    },
+  },
+  hospital: { select: hospitalSummarySelect },
+  requestedBy: { select: { displayName: true } },
+  reviewedBy: { select: { displayName: true } },
+} satisfies Prisma.OrganRequestSelect;
+
+type OrganRequestRow = Prisma.OrganRequestGetPayload<{ select: typeof organRequestSelect }>;
+
+/** Donor identity is deliberately reduced to id + donorCode - no name/contact/medical data. */
+export function toOrganRequest(r: OrganRequestRow) {
+  return {
+    id: r.id,
+    status: r.status,
+    notes: r.notes,
+    declineReason: r.declineReason,
+    organ: {
+      id: r.organ.id,
+      organType: r.organ.organType,
+      otherOrganName: r.organ.otherOrganName,
+      status: r.organ.status,
+      procurementDate: toDateOnly(r.organ.procurementDate),
+      donorCode: r.organ.donor.donorCode,
+    },
+    hospital: toHospitalSummary(r.hospital),
+    requestedBy: r.requestedBy?.displayName ?? null,
+    reviewedBy: r.reviewedBy?.displayName ?? null,
+    reviewedAt: r.reviewedAt?.toISOString() ?? null,
+    createdAt: r.createdAt.toISOString(),
+    updatedAt: r.updatedAt.toISOString(),
+  };
+}
+
 export const adminWithdrawalSelect = {
   ...withdrawalSelect,
   donor: {

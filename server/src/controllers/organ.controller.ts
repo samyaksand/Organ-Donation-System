@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { donorIdOf } from '../middleware/auth';
+import { adminIdOf, donorIdOf } from '../middleware/auth';
 import { getBody, getParams, getQuery } from '../middleware/validate';
 import { idParam } from '../schemas/common';
 import {
@@ -46,7 +46,7 @@ export async function create(req: Request, res: Response) {
 
 export async function update(req: Request, res: Response) {
   const { id } = getParams(req, idParam);
-  sendData(res, await organService.updateForAdmin(id, getBody(req, adminUpdateOrganSchema)));
+  sendData(res, await organService.updateForAdmin(id, getBody(req, adminUpdateOrganSchema), adminIdOf(req)));
 }
 
 export async function remove(req: Request, res: Response) {

@@ -4,7 +4,7 @@ import { authApi, type ChangePasswordPayload, type LoginPayload, type RegisterPa
 import { queryKeys } from '@/lib/queryKeys';
 import type { SessionUser } from '@/types/api';
 
-/** Current session (GET /auth/me). Resolves to `null` when signed out — never throws for 401. */
+/** Current session (GET /auth/me). Resolves to `null` when signed out - never throws for 401. */
 export function useSession() {
   return useQuery<SessionUser | null>({
     queryKey: queryKeys.session,
@@ -46,9 +46,15 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => authApi.logout(),
     onSettled: () => {
-      // Drop every cached private record so the next user never sees them.
-      qc.clear();
+      // Order matters: write the signed-out session FIRST so every mounted component reading
+      // useSession() (navbar, UserMenu, RequireRole) re-renders as signed-out immediately.
+      // qc.clear() alone is not enough - it REMOVES the session query rather than updating it,
+      // so an observer can briefly see stale `data` until something re-subscribes; setting the
+      // query data explicitly guarantees a synchronous update with no window of staleness.
       qc.setQueryData(queryKeys.session, null);
+      // Then drop every other cached private record so the next user (on a shared machine)
+      // never sees them, without reintroducing the stale-session window.
+      qc.removeQueries({ predicate: (q) => q.queryKey[0] !== 'session' });
     },
   });
 }

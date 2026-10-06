@@ -28,7 +28,7 @@ export const registerSchema = z
     personalDoctor: optionalText(120),
     hospitalId: z.string().min(1).max(64).nullish(),
     medicalConditions: optionalText(2000),
-    // Next of kin (legacy nextofkin table — required at signup, as before)
+    // Next of kin (legacy nextofkin table - required at signup, as before)
     nextOfKin: z
       .object({
         name: requiredText('Next of kin name', 120),

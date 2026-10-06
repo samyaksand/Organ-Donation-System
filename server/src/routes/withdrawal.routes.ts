@@ -20,5 +20,6 @@ router.patch(
   validate({ params: idParam, body: reviewWithdrawalSchema }),
   withdrawals.review,
 );
+router.get('/:id/history', requireRole('ADMIN', 'SUPER_ADMIN'), validate({ params: idParam }), withdrawals.history);
 
 export default router;

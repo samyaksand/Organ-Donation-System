@@ -4,8 +4,10 @@ import { todayDateOnly } from '../utils/dates';
 export const ORGAN_TYPES = ['KIDNEY', 'LIVER', 'HEART', 'LUNG', 'PANCREAS', 'CORNEA', 'OTHER'] as const;
 export const ORGAN_STATUSES = ['PENDING', 'AVAILABLE', 'UNAVAILABLE'] as const;
 export const WITHDRAWAL_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
-export const DONOR_STATUSES = ['ACTIVE', 'WITHDRAWN'] as const;
+export const ORGAN_REQUEST_STATUSES = ['PENDING', 'APPROVED', 'DECLINED', 'CANCELLED'] as const;
+export const DONOR_STATUSES = ['PENDING', 'ACTIVE', 'WITHDRAWN'] as const;
 export const GENDERS = ['MALE', 'FEMALE', 'OTHER'] as const;
+export const BLOOD_TYPES = ['A_POS', 'A_NEG', 'B_POS', 'B_NEG', 'AB_POS', 'AB_NEG', 'O_POS', 'O_NEG'] as const;
 
 export const idParam = z.object({ id: z.string().min(1).max(64) }).strict();
 

@@ -28,7 +28,10 @@ export function createPrismaMock() {
     hospital: model(),
     organ: model(),
     withdrawalRequest: model(),
+    organRequest: model(),
     recoveryLog: model(),
+    workflowEvent: model(),
+    pledge: model(),
     $transaction: vi.fn(),
     $disconnect: vi.fn(),
   };

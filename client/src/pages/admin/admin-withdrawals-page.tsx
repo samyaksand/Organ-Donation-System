@@ -1,4 +1,4 @@
-import { Check, FileClock, X } from 'lucide-react';
+import { Check, Clock, FileClock, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { type Column, DataTable } from '@/components/common/data-table';
 import { EmptyState } from '@/components/common/empty-state';
@@ -9,6 +9,7 @@ import { WithdrawalStatusBadge } from '@/components/common/status-badges';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ReviewWithdrawalDialog } from '@/features/withdrawals/components/review-withdrawal-dialog';
+import { WithdrawalTimelineDialog } from '@/features/withdrawals/components/withdrawal-timeline-dialog';
 import { useAdminWithdrawals } from '@/features/withdrawals/hooks';
 import { useDebounce } from '@/hooks/use-debounce';
 import { useDocumentTitle } from '@/hooks/use-document-title';
@@ -32,6 +33,7 @@ export function AdminWithdrawalsPage() {
   const query = useAdminWithdrawals({ q: values.q || undefined, status, page, pageSize: 10 });
 
   const [reviewing, setReviewing] = useState<{ request: AdminWithdrawal; decision: 'APPROVED' | 'REJECTED' } | null>(null);
+  const [viewingTimeline, setViewingTimeline] = useState<AdminWithdrawal | null>(null);
 
   const columns: Column<AdminWithdrawal>[] = [
     {
@@ -67,7 +69,7 @@ export function AdminWithdrawalsPage() {
             {w.reviewedBy && <p className="text-muted-foreground">by {w.reviewedBy}</p>}
           </div>
         ) : (
-          <span className="text-muted-foreground">—</span>
+          <span className="text-muted-foreground">-</span>
         ),
     },
   ];
@@ -105,18 +107,23 @@ export function AdminWithdrawalsPage() {
               <WithdrawalStatusBadge status={w.status} />
             </div>
           )}
-          rowActions={(w) =>
-            w.status === 'PENDING' ? (
-              <div className="flex justify-end gap-1">
-                <Button size="sm" variant="outline" onClick={() => setReviewing({ request: w, decision: 'APPROVED' })} aria-label={`Approve request from ${w.donor.name}`}>
-                  <Check aria-hidden="true" /> <span className="hidden xl:inline">Approve</span>
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setReviewing({ request: w, decision: 'REJECTED' })} aria-label={`Decline request from ${w.donor.name}`}>
-                  <X aria-hidden="true" /> <span className="hidden xl:inline">Decline</span>
-                </Button>
-              </div>
-            ) : null
-          }
+          rowActions={(w) => (
+            <div className="flex justify-end gap-1">
+              {w.status === 'PENDING' && (
+                <>
+                  <Button size="sm" variant="outline" onClick={() => setReviewing({ request: w, decision: 'APPROVED' })} aria-label={`Approve request from ${w.donor.name}`}>
+                    <Check aria-hidden="true" /> <span className="hidden xl:inline">Approve</span>
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setReviewing({ request: w, decision: 'REJECTED' })} aria-label={`Decline request from ${w.donor.name}`}>
+                    <X aria-hidden="true" /> <span className="hidden xl:inline">Decline</span>
+                  </Button>
+                </>
+              )}
+              <Button size="sm" variant="ghost" onClick={() => setViewingTimeline(w)} aria-label={`View timeline for request from ${w.donor.name}`}>
+                <Clock aria-hidden="true" /> <span className="hidden xl:inline">Timeline</span>
+              </Button>
+            </div>
+          )}
           empty={
             <EmptyState
               icon={FileClock}
@@ -133,6 +140,7 @@ export function AdminWithdrawalsPage() {
         decision={reviewing?.decision ?? 'APPROVED'}
         onOpenChange={(open) => !open && setReviewing(null)}
       />
+      <WithdrawalTimelineDialog request={viewingTimeline} onOpenChange={(open) => !open && setViewingTimeline(null)} />
     </div>
   );
 }

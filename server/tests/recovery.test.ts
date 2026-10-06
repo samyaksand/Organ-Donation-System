@@ -128,7 +128,7 @@ describe('System Recovery restore flow', () => {
     expect(res.status).toBe(200);
     expect(res.body.data.ok).toBe(true);
 
-    // Audit log: who, when, success/failure — written once, after the restore attempt finishes
+    // Audit log: who, when, success/failure - written once, after the restore attempt finishes
     // (never before: pg_restore recreates recovery_logs itself, so a pre-restore row would be
     // wiped out by the very operation it is meant to record).
     expect(prisma.recoveryLog.create).toHaveBeenCalledWith({

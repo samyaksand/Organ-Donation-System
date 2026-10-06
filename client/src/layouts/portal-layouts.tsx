@@ -1,4 +1,4 @@
-import { Building2, FileClock, HeartPulse, LayoutDashboard, LogOut, ShieldAlert, UserRound, Users } from 'lucide-react';
+import { BarChart3, Building2, ClipboardList, FileClock, HeartPulse, LayoutDashboard, LogOut, ShieldAlert, Sparkles, UserRound, Users } from 'lucide-react';
 import { useSession } from '@/features/auth/hooks';
 import { useAdminOverview } from '@/features/admin/hooks';
 import { DashboardLayout, type NavItem } from './dashboard-layout';
@@ -19,10 +19,13 @@ export function AdminConsoleLayout() {
   const { data: user } = useSession();
   const nav: NavItem[] = [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { to: '/admin/operations-intelligence', label: 'Operations Intelligence', icon: Sparkles },
     { to: '/admin/donors', label: 'Donors', icon: Users },
     { to: '/admin/organs', label: 'Organs', icon: HeartPulse },
     { to: '/admin/hospitals', label: 'Hospitals', icon: Building2 },
     { to: '/admin/withdrawals', label: 'Withdrawal requests', icon: FileClock, badge: overview.data?.pendingWithdrawals },
+    { to: '/admin/organ-requests', label: 'Organ requests', icon: ClipboardList, badge: overview.data?.pendingOrganRequests },
   ];
   // Not shown to ADMIN, only to the private SUPER_ADMIN session.
   if (user?.role === 'SUPER_ADMIN') {

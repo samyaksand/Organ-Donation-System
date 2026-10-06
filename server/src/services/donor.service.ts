@@ -20,6 +20,7 @@ import {
   toWithdrawal,
   withdrawalSelect,
 } from './mappers';
+import { recordStatusChanged } from './workflowEvent.service';
 
 async function assertHospitalExists(hospitalId: string | null | undefined) {
   if (!hospitalId) return;
@@ -182,8 +183,8 @@ export async function getDonorForAdmin(donorId: string) {
 }
 
 /** Admin update (legacy POST /auth/update: Email / Ailments / Contact, now whitelisted). */
-export async function adminUpdateDonor(donorId: string, input: AdminUpdateDonorInput) {
-  const exists = await prisma.donor.findUnique({ where: { id: donorId }, select: { id: true } });
+export async function adminUpdateDonor(donorId: string, input: AdminUpdateDonorInput, actorId: string | null) {
+  const exists = await prisma.donor.findUnique({ where: { id: donorId }, select: { id: true, status: true } });
   if (!exists) throw AppError.notFound('Donor');
 
   const donor = await prisma.donor.update({
@@ -196,6 +197,15 @@ export async function adminUpdateDonor(donorId: string, input: AdminUpdateDonorI
     },
     select: donorProfileSelect,
   });
+  if (input.status) {
+    await recordStatusChanged(prisma, {
+      entityType: 'DONOR',
+      entityId: donorId,
+      fromStatus: exists.status,
+      toStatus: input.status,
+      actorId,
+    });
+  }
   return toDonorProfile(donor);
 }
 

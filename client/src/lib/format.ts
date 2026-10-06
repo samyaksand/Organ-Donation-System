@@ -5,16 +5,16 @@ const numberFormatter = new Intl.NumberFormat();
 
 /** Formats a `YYYY-MM-DD` (date-only) value without timezone shifting. */
 export function formatDate(value: string | null | undefined) {
-  if (!value) return '—';
+  if (!value) return '-';
   const iso = value.length === 10 ? `${value}T00:00:00Z` : value;
   const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? '—' : dateFormatter.format(date);
+  return Number.isNaN(date.getTime()) ? '-' : dateFormatter.format(date);
 }
 
 export function formatDateTime(value: string | null | undefined) {
-  if (!value) return '—';
+  if (!value) return '-';
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '—' : dateTimeFormatter.format(date);
+  return Number.isNaN(date.getTime()) ? '-' : dateTimeFormatter.format(date);
 }
 
 export function formatRelative(value: string) {

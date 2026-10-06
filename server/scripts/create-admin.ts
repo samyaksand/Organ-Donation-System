@@ -3,7 +3,7 @@
  *
  *   npm run admin:create -- --email admin@hospital.org --name "Jane Doe"
  *
- * The password is read from ADMIN_PASSWORD or prompted for. It is stored as a bcrypt hash —
+ * The password is read from ADMIN_PASSWORD or prompted for. It is stored as a bcrypt hash -
  * the legacy system kept admin passwords in plaintext; there is no public admin signup.
  */
 import { createInterface } from 'node:readline/promises';
