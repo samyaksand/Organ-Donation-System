@@ -32,7 +32,7 @@ export function AskOrganFlowSection() {
   const run = (q?: string) => investigate.mutate(q || undefined);
 
   return (
-    <section aria-labelledby="ask-organflow-heading" className="container space-y-8 py-16">
+    <section id="ask-organflow" aria-labelledby="ask-organflow-heading" className="container scroll-mt-20 space-y-8 py-16">
       <SectionHeading
         id="ask-organflow-heading"
         eyebrow="AI-assisted investigation"

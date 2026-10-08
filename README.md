@@ -1,34 +1,62 @@
 # OrganFlow
 
-## An Organ Donation Operations and Intelligence Platform
+## An Operational Information System for Organ Donation
 
-OrganFlow turns organ donation record-keeping into an operational information system: donor
-and organ registration, hospital coordination, a structured request-and-fulfillment workflow,
-deterministic management analytics, and a controlled, read-only AI layer that interprets those
-analytics for administrators. Every figure shown anywhere in the product, public or admin,
-is a live database count, never a hardcoded or invented number.
+OrganFlow follows one information-systems pipeline from raw data to a governed decision:
+
+```
+Operational data  ->  Business process  ->  KPI calculation  ->  Insight (trend/threshold)
+                 ->  Decision support (human + AI interpretation)  ->  Governance (access control + audit)
+```
+
+Donor and organ registration, hospital coordination, and a structured hospital request-and-
+fulfillment workflow produce the operational data. A deterministic analytics layer turns that
+data into KPIs, trends, and threshold-based exception alerts. A read-only AI layer interprets
+those same figures for administrators and the public, always citing its evidence. A server-side
+RBAC/ABAC policy engine and audit trail govern who can see what, including what the AI layer
+itself is allowed to touch. Every figure shown anywhere in the product, public or admin, is a
+live database count, never a hardcoded or invented number.
 
 > **This is demo/simulated data for a database-systems course project.** It is not a live
 > national donor registry, a hospital information system, or a real transplant allocation
-> platform, and it does not store real patient or medical records.
+> platform, does not perform donor-recipient matching or any medical/clinical decision, and does
+> not store real patient or medical records.
+
+## Demo video
+
+A 2-3 minute walkthrough of the full pipeline: public exploration, the donation pledge and
+certificate, donor and admin portals, management analytics, the hospital organ-request workflow,
+AI-assisted investigation, and the security and access-control layer.
+
+https://github.com/samyaksand/Organ-Donation-System/raw/main/docs/demo-recording/organflow-demo.webm
+
+> If the video does not play inline on your screen, open or download it directly from
+> [`docs/demo-recording/organflow-demo.webm`](docs/demo-recording/organflow-demo.webm).
 
 ## Live Demo
 
 🌐 **Live Website:** [https://organflow.samyaksand.com/](https://organflow.samyaksand.com/)
 
 The public site, donor and admin portals, analytics, pledge flow, and AI investigation are all
-reachable without an account except where noted. A public Demo Admin login is documented below.
+reachable without an account except where noted.
+
+**Admin portal demo login** (demo data only; see [Demo accounts](#demo-accounts) for details):
+- Email: `demo@organflow.app`
+- Password: `DemoAdmin123!`
+
+A separate, private Super Admin account (not publicly documented) can restore the system to a
+known-good demo snapshot at any time, so changes made through the Demo Admin are never permanent.
 
 ---
 
 ## From CS254 to OrganFlow
 
-About four years ago, this project began as a Kidney Donation Management System for my Database
-Systems (CS254) course under Prof. Annappa at NITK Surathkal, where it received a 9 CGPA. The
-original application was built with Express, EJS, and MySQL, and covered seven pages of donor
-registration, donor/admin accounts, and kidney availability.
+About four years ago, this project began as a Kidney Donation Management System for my Database Systems (CS254) course under Prof. Annappa at NITK Surathkal, where it received a 9 CGPA. The original application was a Kidney Donation Management System built with Express, EJS, and
+MySQL, covering seven pages of donor registration, donor/admin accounts, and kidney availability.
 
-I later rebuilt it as OrganFlow, in stages:
+Later, it got extended by applying concepts learned in CS418 (Information Security) taught by Prof. Mahendra at NIT Karnataka, India.
+
+Now, it is rebuilt as OrganFlow in stages:
 
 1. **Full-stack platform** - generalized from kidney-only to seven organ types, moved to React,
    TypeScript, Express, and PostgreSQL/Prisma, and rebuilt authentication, validation, and
@@ -41,14 +69,18 @@ I later rebuilt it as OrganFlow, in stages:
    the public (aggregate-only, donor identity never exposed), plus a no-account donation pledge.
 5. **AI-assisted investigation** - added a read-only agent that reasons over the existing
    analytics (never raw data) to answer operational questions with cited evidence.
+6. **Information security** - added a server-side RBAC/ABAC policy engine, a security
+   audit trail, an AI Security Gateway in front of every investigation request, and a
+   donor-facing "My Security & Privacy" center with real session management.
 
 The core idea has not changed: a registry of donors, organs, and hospitals, now surrounded by
-the workflow, analytics, and decision-support layers a real operations team would need.
+the workflow, analytics, decision-support, and security layers a real operations team would need.
 
 ---
 
 ## Contents
 
+- [Demo video](#demo-video)
 - [Screenshots](#screenshots)
 - [Features](#features)
 - [Management information system positioning](#management-information-system-positioning)
@@ -58,7 +90,7 @@ the workflow, analytics, and decision-support layers a real operations team woul
 - [Tech stack](#tech-stack)
 - [Database](#database)
 - [API](#api)
-- [Authentication, security and data governance](#authentication-security-and-data-governance)
+- [Security, access control and governance](#security-access-control-and-governance)
 - [Getting started](#getting-started)
 - [Demo accounts](#demo-accounts)
 - [Testing](#testing)
@@ -79,24 +111,29 @@ live in [`docs/screenshots/`](docs/screenshots/).
 | ![Landing page](docs/screenshots/01-landing-page.png) **Landing page**: live counts, the explore-to-act flow, and a prominent pledge call to action | ![Organ availability search](docs/screenshots/02-organ-availability.png) **Organ availability search**, filterable by type, city and status |
 | ![Hospital directory](docs/screenshots/03-hospital-directory.png) **Hospital directory** with contact details and live availability per hospital | ![Public analytics](docs/screenshots/04-public-analytics.png) **Public analytics**: aggregate availability and hospital-network figures |
 | ![Public investigate](docs/screenshots/05-public-investigate.png) **Public Investigate**: ask a question, get an evidence-backed answer | ![Pledge to donate](docs/screenshots/06-pledge-flow.png) **Pledge to donate**: a quick, no-account intent-to-donate flow |
-| ![Pledge certificate](docs/screenshots/07-pledge-certificate.png) **Downloadable pledge certificate**, generated on demand from the pledge record | |
+| ![Pledge certificate](docs/screenshots/07-pledge-certificate.png) **Downloadable pledge certificate**, generated on demand from the pledge record | ![Data classification](docs/screenshots/29-public-data-classification.png) **Data Classification Explorer**: the PUBLIC/PROTECTED/SENSITIVE model behind every access decision, explained with real examples |
+| ![Public Policy Explorer](docs/screenshots/24-public-policy-explorer.png) **Policy Explorer**: pick an actor, resource and action, see the real ALLOW/DENY decision with its role, ownership and sensitivity checks | |
 
 ### Donor portal
 
 | | |
 |---|---|
 | ![Donor dashboard](docs/screenshots/08-donor-dashboard.png) **Donor dashboard**: status, organs, recent activity | ![Registered organs](docs/screenshots/09-donor-registered-organs.png) **Registered organs** and their status |
-| ![Withdrawal request](docs/screenshots/10-donor-withdrawal-request.png) **Withdrawal request**, with history | |
+| ![Withdrawal request](docs/screenshots/10-donor-withdrawal-request.png) **Withdrawal request**, with history | ![Active sessions](docs/screenshots/25-donor-active-sessions.png) **My Security & Privacy - Active sessions**: real signed-in devices, revoke one or all others |
+| ![Security activity](docs/screenshots/30-donor-security-activity.png) **My Security & Privacy - Activity**: a donor's own sign-in, sign-out and access-decision timeline, reusing the same audit trail as the admin dashboard | ![Privacy and access](docs/screenshots/26-donor-privacy-access.png) **My Security & Privacy - Privacy & access**: who can see each category of a donor's own information, drawn from the live policy engine |
 
 ### Administration
 
 | | |
 |---|---|
 | ![Admin dashboard](docs/screenshots/11-admin-dashboard.png) **Admin dashboard** with live registry figures | ![Management analytics](docs/screenshots/12-admin-analytics.png) **Management analytics**: deterministic KPIs, trends, drill-downs |
-| ![Donor management](docs/screenshots/13-admin-donor-management.png) **Donor management**: search, filter, status | ![Organ management](docs/screenshots/14-admin-organ-management.png) **Organ management** across all organ types |
-| ![Hospital management](docs/screenshots/15-admin-hospital-management.png) **Hospital information** management | ![Withdrawal review](docs/screenshots/16-admin-withdrawal-review.png) **Withdrawal review** queue |
-| ![Organ requests](docs/screenshots/17-admin-organ-requests.png) **Hospital organ requests**: pending, approve or decline | ![Organ request timeline](docs/screenshots/18-admin-organ-request-timeline.png) **Request detail and timeline**, from the shared workflow-event log |
-| ![Operations Intelligence](docs/screenshots/19-admin-operations-intelligence.png) **Operations Intelligence**: the admin AI investigation agent | ![Command palette](docs/screenshots/20-command-palette.png) **Command palette** (Ctrl/Cmd+K) for fast navigation |
+| ![Analytics bottlenecks](docs/screenshots/21-admin-analytics-bottlenecks.png) **Operational bottlenecks**: threshold checks over the same figures above, each linking to its underlying records | ![Donor management](docs/screenshots/13-admin-donor-management.png) **Donor management**: search, filter, status |
+| ![Organ management](docs/screenshots/14-admin-organ-management.png) **Organ management** across all organ types | ![Hospital management](docs/screenshots/15-admin-hospital-management.png) **Hospital information** management |
+| ![Withdrawal review](docs/screenshots/16-admin-withdrawal-review.png) **Withdrawal review** queue | ![Organ requests](docs/screenshots/17-admin-organ-requests.png) **Hospital organ requests**: pending, approve or decline |
+| ![Organ request timeline](docs/screenshots/18-admin-organ-request-timeline.png) **Request detail and timeline**, from the shared workflow-event log | ![Operations Intelligence](docs/screenshots/19-admin-operations-intelligence.png) **Operations Intelligence**: the admin AI investigation agent |
+| ![Admin Security overview](docs/screenshots/22-admin-security-overview.png) **Security overview**: real access-decision and AI Security Gateway counts, never fabricated | ![Admin Security decisions](docs/screenshots/27-admin-security-decisions.png) **Access decisions**: allow/deny counts broken down by actor role and by resource |
+| ![Admin Security AI Gateway](docs/screenshots/23-admin-security-ai-gateway.png) **AI Security Gateway**: requests by classification and recent gateway decisions | ![Admin Security violations](docs/screenshots/28-admin-security-violations.png) **Policy violations**: denied access attempts grouped by the policy that produced them, ranked by count |
+| ![Command palette](docs/screenshots/20-command-palette.png) **Command palette** (Ctrl/Cmd+K) for fast navigation | |
 
 ## Features
 
@@ -220,11 +257,13 @@ registration:
 ![OrganFlow Architecture](docs/architecture.png)
 
 The React client calls a versioned REST API over an httpOnly JWT cookie. Express routes validate
-every request with Zod, authenticate and authorize it, and hand off to thin controllers backed by
-services, which use Prisma to read and write PostgreSQL. Analytics, workflow, and pledge/
-certificate logic live in that same service layer. The AI investigation layer sits beside it as a
-separate, read-only consumer of a fixed set of analytics tool functions - it has no direct or
-unrestricted database access.
+every request with Zod, authenticate it, and pass it through the policy engine (role, ownership,
+and data-classification checks, with every decision audited) before handing off to thin
+controllers backed by services, which use Prisma to read and write PostgreSQL. Analytics,
+workflow, and pledge/certificate logic live in that same service layer. The AI investigation
+layer sits beside it as a separate, read-only consumer of a fixed set of analytics tool
+functions, gated by its own AI Security Gateway - it has no direct or unrestricted database
+access, and a blocked request never reaches a provider.
 
 ### Project and user flow
 
@@ -264,10 +303,16 @@ PostgreSQL via Prisma (`prisma/schema.prisma`). Major models:
 | `WorkflowEvent` | Shared creation/status-change log behind every request/withdrawal timeline and the analytics layer's processing-time KPIs |
 | `Pledge` | Public, no-account intent-to-donate record (name, email, city, organ preference, consent) |
 | `RecoveryLog` | Records of demo-data snapshot/restore operations (System Recovery) |
+| `SecurityPolicy` | Read-only mirror of the code-defined access-control matrix, for the Policy Explorer and admin dashboard |
+| `SecurityEvent` | Every RBAC/ownership/ABAC access decision and meaningful account event (sign-in, sign-out, session revoked, password changed) |
+| `AiSecurityEvent` | Every AI Security Gateway classification, allowed or blocked, with a short question excerpt only (never the full prompt) |
+| `UserSession` | One row per signed-in device; backs real session listing/revocation, independent of the JWT's own expiry |
 
 Enums include `Role` (with `SUPER_ADMIN`), `DonorStatus`, `BloodType`, `OrganType`,
 `OrganStatus`, `WithdrawalStatus`, `OrganRequestStatus`, `WorkflowEntityType`/`WorkflowEventType`,
-and `RecoveryStatus`. Every table has `createdAt`/`updatedAt`; search paths are indexed.
+`RecoveryStatus`, `DataClassification` (PUBLIC/PROTECTED/SENSITIVE), `AccessDecision`
+(ALLOW/DENY), and `AiRequestClassification`. Every table has `createdAt`/`updatedAt`; search
+paths are indexed.
 
 **Key status rules**
 - Donor-submitted organs start pending; admins verify them to available or mark them
@@ -295,26 +340,75 @@ Error: `{ "error": { "code", "message", "details"?: { "fields": [...] } } }`.
 | Analytics (public) | public | `GET /public-analytics/overview|organs|hospitals|concentration|trends|breaches` |
 | Investigation (admin) | admin | `POST /agent/investigate` |
 | Investigation (public) | public | `POST /public-agent/investigate` |
+| My Security (any signed-in user) | self | `GET /me/sessions`, `DELETE /me/sessions/:id`, `POST /me/sessions/revoke-others`, `GET /me/security/activity` |
+| Security (admin) | admin | `GET /security/overview|decisions|denied|violations|trends|history|ai-events|ai-breakdown` |
+| Security (public) | public | `POST /public-security/explore` (Policy Explorer), `GET /public-security/matrix` |
 | Health | public | `GET /health` |
 
-## Authentication, security and data governance
+## Security, access control and governance
 
-- JWT authentication in an httpOnly cookie, with role-based authorization (`DONOR`, `ADMIN`,
-  `SUPER_ADMIN`) enforced in Express middleware on every protected route.
-- Passwords are hashed with bcrypt (cost 12), admin accounts included; there is no public
-  admin sign-up.
-- Every request body, query, and param is validated with Zod; unexpected fields are rejected.
-- Separate rate limits for authentication, general public endpoints, and the AI investigation
-  endpoints (the latter keyed per signed-in admin or by IP for the public agent, since LLM calls
-  are comparatively expensive to abuse).
-- Standard security headers (Helmet, CORS), environment-based secrets, nothing hardcoded.
+![OrganFlow Security Architecture](docs/security-architecture.png)
+
+Access control is a dedicated server-side layer, not scattered checks: every request is
+evaluated as **Actor -> Resource -> Action -> Context -> Policy evaluation -> ALLOW/DENY ->
+Audit**.
+
+- **Authentication**: JWT in an httpOnly cookie, with role-based authorization (`DONOR`, `ADMIN`,
+  `SUPER_ADMIN`) enforced in Express middleware on every protected route. Passwords are hashed
+  with bcrypt (cost 12), admin accounts included; there is no public admin sign-up.
+- **RBAC + ownership + ABAC**: a single access-control matrix (role x resource x action x
+  ownership -> data classification -> decision) is the one source of truth for every access
+  decision. A donor's own profile, medical information, organs, next-of-kin, and withdrawal
+  requests resolve to ALLOW only when the request is their own; the same resource for another
+  donor resolves to DENY, enforced server-side regardless of what the UI shows.
+- **Data classification**: every resource is PUBLIC, PROTECTED, or SENSITIVE. Medical
+  information and next-of-kin detail are SENSITIVE and never reachable by anyone but the owning
+  donor or an administrator - never by another donor, and never by the AI layer's public tools.
+- **Security auditing**: every access decision and a deliberately small set of meaningful
+  account events (sign-in, sign-out, session revoked, password changed) are recorded, visible to
+  an administrator on the Security dashboard and, for a donor's own events, on their My Security
+  & Privacy page. Denied attempts, sensitive-resource access, and policy violations are included;
+  routine successful reads are not logged one row per request.
+- **Real session management**: each sign-in creates a server-side session record (not only a
+  JWT); a donor or admin can view their active devices and revoke any one of them - or all
+  others at once - and a revoked session stops authenticating immediately, even if its token has
+  not expired yet.
+- **AI Security Gateway**: every investigation request, public or admin, is classified by a
+  deterministic, server-side check *before* any LangGraph or provider call - out-of-scope,
+  private-data, credential, or security-abuse requests are blocked and never reach an AI
+  provider. Only a request classified as in-scope reaches the model.
+- **AI data governance**: the AI layer never receives raw database access or write capability;
+  every tool it can call is a named, reviewed function reusing an existing analytics or workflow
+  service. The public agent and the admin agent use two independent, non-overlapping tool lists.
+  Every investigation result cites which tools produced its evidence, and the AI can never grant
+  or revoke access, change a role, modify a policy, or alter any record.
 - **Public/private data boundary**: public analytics and the public agent are built from
   independent, narrowed code paths (a DTO layer and a separate tool list respectively) that
   structurally cannot reach donor identity or individual workflow records - the boundary is
   enforced in code, not by hiding fields in the UI.
-- **AI data governance**: the AI layer never receives raw database access or write capability;
-  every tool it can call is a named, reviewed function reusing an existing analytics or workflow
-  service, and every investigation result cites which tools produced its evidence.
+- Every request body, query, and param is validated with Zod; unexpected fields are rejected.
+  Separate rate limits apply to authentication, general public endpoints, and the AI
+  investigation endpoints (the latter keyed per signed-in admin or by IP for the public agent,
+  since LLM calls are comparatively expensive to abuse). Standard security headers (Helmet,
+  CORS), environment-based secrets, nothing hardcoded.
+
+### Public Policy Explorer and My Security & Privacy
+
+The policy engine above is not just internal plumbing - it is demonstrated interactively:
+
+- **`/security`** (public, no account): a Data Classification explorer, an interactive **Policy
+  Explorer** (pick an actor, a resource, and an action, and see the real ALLOW/DENY decision with
+  its role/ownership/sensitivity reasoning), and an "Ask OrganFlow"-style AI section scoped to
+  public security questions, behind the same AI Security Gateway as everywhere else.
+- **My Security & Privacy** (`/donor/security`, any signed-in user): account status, last
+  sign-in, active sessions with per-device revoke and "sign out of all other sessions", a
+  personal security activity timeline, and a "Who can access my information?" explorer that
+  answers from the same server-side policy engine - never a hardcoded frontend table. Sensitive
+  profile tabs (medical information, next-of-kin) carry a "Why can I see this?" explanation
+  backed by a live policy evaluation.
+- **`/admin/security`** (admin only): real counts of access decisions, policy violations, and AI
+  Security Gateway activity (allowed and blocked investigation requests) - never a fabricated
+  metric.
 
 ## Getting started
 
@@ -378,6 +472,18 @@ system to a known-good demo snapshot at any time, so demo-data changes are never
 For local development, `npm run db:seed` creates its own local-only admin
 (`demo.admin@example.com` / `DemoPass123`) and donor accounts (`dnmum001@example.com`, etc.,
 same password), separate from the public Demo Admin.
+
+### System Recovery (Super Admin)
+
+The known-good snapshot is a full `pg_dump` of the database, so it captures the complete current
+state across every feature area - donors, next-of-kin, hospitals, organs, withdrawals, organ
+requests, workflow events, pledges, security policies, security events, AI security events, and
+sessions - not a partial or hand-picked subset. Restoring runs `pg_restore --clean --if-exists`,
+which replaces the schema's objects with exactly that snapshot rather than merging into whatever
+is currently there. Only `SUPER_ADMIN` can trigger it, and every attempt (success or failure) is
+recorded after the restore completes. See [`docs/demo-recovery.md`](docs/demo-recovery.md) for
+the full mechanism. `DEMO_RECOVERY_ENABLED` is `false` by default and stays `false` in
+production; it is a demo-environment safety net, not a production backup/restore feature.
 
 ## Testing
 

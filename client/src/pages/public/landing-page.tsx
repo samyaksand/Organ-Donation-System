@@ -1,5 +1,6 @@
 import {
   ArrowRight,
+  ArrowUp,
   BarChart3,
   Building2,
   ClipboardCheck,
@@ -33,6 +34,12 @@ import { useDocumentTitle } from '@/hooks/use-document-title';
 import { ORGAN_TYPE_DESCRIPTIONS, ORGAN_TYPE_LABELS } from '@/lib/domain';
 import { formatNumber } from '@/lib/format';
 import { ORGAN_TYPES } from '@/types/api';
+
+/** Smooth, in-page scroll to an element id - no route change, no reload. Falls back silently if
+ * the target isn't mounted yet (shouldn't happen since every anchor target lives on this page). */
+function scrollToId(id: string) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 const steps = [
   {
@@ -105,9 +112,9 @@ function AcademicOriginBanner() {
       <div className="container flex flex-col items-center gap-2 py-3 text-center sm:flex-row sm:justify-center sm:gap-3 sm:py-2.5">
         <GraduationCap className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
         <p className="min-w-0 text-sm text-foreground/80">
-          Originally developed as a CS254 Database Systems (DBMS) project under Prof. Annappa at NITK
-          Surathkal, later extended by applying concepts learned in CS418 (Information Security) taught
-          by Prof. Mahendra
+          Originally developed as a CS254 Database Systems (DBMS) project under Prof. Annappa, later
+          extended by applying concepts learned in CS418 (Information Security) taught by Prof. Mahendra
+          at NIT Karnataka, India
         </p>
       </div>
     </div>
@@ -146,11 +153,20 @@ function Hero() {
               </Link>
             </Button>
           </div>
-          <Button size="lg" variant="secondary" asChild>
-            <Link to="/pledge">
-              <HeartHandshake aria-hidden="true" /> Pledge to Donate
-            </Link>
-          </Button>
+          <div className="flex flex-wrap items-center gap-4">
+            <Button size="lg" variant="secondary" asChild>
+              <Link to="/pledge">
+                <HeartHandshake aria-hidden="true" /> Pledge to Donate
+              </Link>
+            </Button>
+            <button
+              type="button"
+              onClick={() => scrollToId('ask-organflow')}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              Ask OrganFlow <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <ShieldCheck className="h-4 w-4 text-primary" aria-hidden="true" />
             Donor identities are never shown in public searches.
@@ -412,6 +428,20 @@ function DonorCta() {
   );
 }
 
+function BackToTop() {
+  return (
+    <div className="container flex justify-center pb-12">
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        Back to top <ArrowUp className="h-4 w-4" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 export function LandingPage() {
   useDocumentTitle();
   return (
@@ -426,6 +456,7 @@ export function LandingPage() {
       <Hospitals />
       <AskOrganFlowSection />
       <DonorCta />
+      <BackToTop />
     </>
   );
 }
