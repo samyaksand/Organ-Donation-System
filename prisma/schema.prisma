@@ -17,6 +17,7 @@ model User {
   updatedAt    DateTime  @updatedAt @map("updated_at")
   admin        Admin?
   donor        Donor?
+  sessions     UserSession[]
 
   @@index([role])
   @@map("users")
@@ -335,4 +336,145 @@ model Pledge {
   @@index([email])
   @@index([createdAt])
   @@map("pledges")
+}
+
+// ---------------------------------------------------------------------------
+// Security / access-control layer (RBAC + ownership + ABAC). See
+// server/src/security/policyEngine.ts for the actual enforcement logic - every row here is a
+// read audit trail or a display-only reference copy of the policy matrix, never the source of
+// a live decision. The AI investigation layer is secured by the same policy engine, through
+// agent/securityTools.ts and agent/securityGateway.ts, not a separate mechanism.
+// ---------------------------------------------------------------------------
+
+/// Resource sensitivity used by the policy engine's data-classification axis and shown on the
+/// public Data Classification Explorer. PUBLIC: no account needed. PROTECTED: requires a
+/// signed-in account and, for donor-scoped resources, ownership. SENSITIVE: medical/next-of-kin
+/// detail - requires ownership (donor) or an administrator role; never shown to the public agent.
+enum DataClassification {
+  PUBLIC
+  PROTECTED
+  SENSITIVE
+}
+
+enum AccessDecision {
+  ALLOW
+  DENY
+}
+
+/// A reviewable, display-only copy of the access-control matrix enforced in
+/// server/src/security/policies.ts. Seeded once from that same source of truth (see
+/// prisma/seed.ts) so the public Policy Explorer and admin Security dashboard can list/query
+/// policies without duplicating the enforcement code path into SQL. Never read by
+/// policyEngine.ts itself when making a live decision.
+model SecurityPolicy {
+  id             String             @id @default(cuid())
+  /// Stable slug matching the policy's id in policies.ts, e.g. "donor-own-profile-view".
+  code           String             @unique
+  /// "PUBLIC" | "DONOR" | "ADMIN" | "SUPER_ADMIN" - a plain string, not the Role enum, because
+  /// PUBLIC (unauthenticated) is a valid actor in the access-control matrix but not a valid
+  /// User.role value.
+  role           String
+  resource       String
+  action         String
+  classification DataClassification
+  requiresOwnership Boolean         @map("requires_ownership")
+  decision       AccessDecision
+  description    String
+
+  @@index([role, resource, action])
+  @@map("security_policies")
+}
+
+/// One recorded access-control decision (RBAC + ownership + ABAC), written by
+/// security/policyEngine.ts every time it evaluates a guarded operation - including the AI
+/// gateway's tool-authorization checks. Metadata only: never stores medical data, credentials,
+/// secrets, or a raw request body/prompt.
+model SecurityEvent {
+  id             String             @id @default(cuid())
+  /// Null for an unauthenticated (PUBLIC) actor.
+  actorUserId    String?            @map("actor_user_id")
+  actorRole      String             @map("actor_role")
+  resource       String
+  action         String
+  classification DataClassification
+  decision       AccessDecision
+  /// Which named policy produced this decision (SecurityPolicy.code), for traceability.
+  policyCode     String             @map("policy_code")
+  reason         String
+  /// Resource instance id when the check was ownership-scoped (e.g. a donorId), never a full record.
+  resourceId     String?            @map("resource_id")
+  ipAddress      String?            @map("ip_address")
+  createdAt      DateTime           @default(now()) @map("created_at")
+
+  @@index([decision, createdAt])
+  @@index([actorRole, createdAt])
+  @@index([resource, action])
+  @@index([createdAt])
+  @@map("security_events")
+}
+
+enum AiRequestClassification {
+  ORGANFLOW_RELEVANT
+  OUT_OF_SCOPE
+  PRIVATE_DATA_REQUEST
+  CREDENTIAL_REQUEST
+  SECURITY_ABUSE
+  INAPPROPRIATE_CONTENT
+  AUTHORIZED_SECURITY_ANALYSIS
+}
+
+/// One AI Security Gateway decision - recorded for every investigation request (admin or
+/// public) BEFORE any LangGraph/LLM/provider call is made for ALLOW, and INSTEAD OF one for
+/// BLOCK. Never stores the raw prompt text beyond a short, truncated excerpt (for operator
+/// troubleshooting only) and never stores a provider response.
+model AiSecurityEvent {
+  id             String                   @id @default(cuid())
+  actorUserId    String?                  @map("actor_user_id")
+  actorRole      String                   @map("actor_role")
+  /// "admin" or "public" - which investigation entry point this request came through.
+  surface        String
+  classification AiRequestClassification
+  decision       AccessDecision
+  reason         String
+  /// First 160 chars of the question, for operator troubleshooting only - never the full prompt,
+  /// never logged anywhere else, never shown to any end user other than an admin on /admin/security.
+  questionExcerpt String?                 @map("question_excerpt")
+  toolsAuthorized String[]                @map("tools_authorized")
+  createdAt      DateTime                 @default(now()) @map("created_at")
+
+  @@index([decision, createdAt])
+  @@index([classification, createdAt])
+  @@index([createdAt])
+  @@map("ai_security_events")
+}
+
+/// Real server-side session record, one per signed-in device/browser. The JWT's `jti` claim is
+/// this row's id (see server/src/utils/jwt.ts) - requireAuth looks the session up on every
+/// request and rejects a revoked or expired one immediately, even if the JWT itself has not
+/// expired yet. This is what makes "Sign out of this device" and "Sign out of all other
+/// sessions" actually work, rather than only clearing a cookie the old token could still replay.
+/// Never stores the raw JWT/cookie value - only a SHA-256 hash of it, so a leaked database row
+/// can never be replayed as a session token on its own.
+model UserSession {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  /// SHA-256 hex digest of the signed JWT this session issued. Looked up on each request instead
+  /// of storing the token itself.
+  tokenHash      String    @unique @map("token_hash")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  lastUsedAt     DateTime  @default(now()) @map("last_used_at")
+  expiresAt      DateTime  @map("expires_at")
+  revokedAt      DateTime? @map("revoked_at")
+  /// Coarse, privacy-safe device metadata parsed from the User-Agent header at login time - never
+  /// a fingerprinting payload, never raw headers.
+  browser        String?
+  os             String?
+  /// Optional, coarse and privacy-safe: never a precise location, never stored as a claim of
+  /// geography - see services/session.service.ts for what little is derived from it, if anything.
+  ipHash         String?   @map("ip_hash")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("user_sessions")
 }

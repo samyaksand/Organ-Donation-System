@@ -1,6 +1,10 @@
 /** Centralised TanStack Query keys so invalidation stays consistent across features. */
 export const queryKeys = {
   session: ['session'] as const,
+  me: {
+    sessions: ['me', 'sessions'] as const,
+    activity: (limit: number) => ['me', 'activity', limit] as const,
+  },
   donor: {
     all: ['donor'] as const,
     profile: ['donor', 'profile'] as const,
@@ -54,5 +58,17 @@ export const queryKeys = {
     concentration: ['public', 'concentration'] as const,
     trends: ['public', 'trends'] as const,
     breaches: ['public', 'breaches'] as const,
+    securityMatrix: ['public', 'security-matrix'] as const,
+  },
+  security: {
+    all: ['security'] as const,
+    overview: (params: object) => ['security', 'overview', params] as const,
+    decisions: (params: object) => ['security', 'decisions', params] as const,
+    denied: (params: object) => ['security', 'denied', params] as const,
+    violations: (params: object) => ['security', 'violations', params] as const,
+    trends: (params: object) => ['security', 'trends', params] as const,
+    history: (params: object) => ['security', 'history', params] as const,
+    aiEvents: (params: object) => ['security', 'ai-events', params] as const,
+    aiBreakdown: (params: object) => ['security', 'ai-breakdown', params] as const,
   },
 };

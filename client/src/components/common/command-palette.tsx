@@ -1,5 +1,5 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { BarChart3, Building2, HeartHandshake, LayoutDashboard, Search, Sparkles } from 'lucide-react';
+import { BarChart3, Building2, HeartHandshake, LayoutDashboard, Search, ShieldCheck, Sparkles } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,7 @@ const BASE_COMMANDS: Command[] = [
   { id: 'analytics', label: 'View analytics', hint: 'Public, aggregate figures', icon: BarChart3, to: '/analytics' },
   { id: 'investigate', label: 'Investigate an operational issue', hint: 'Ask an operational question', icon: Sparkles, to: '/investigate' },
   { id: 'pledge', label: 'Pledge to donate', hint: 'Quick, no-account pledge', icon: HeartHandshake, to: '/pledge' },
+  { id: 'security', label: 'Privacy & Security', hint: 'How access control works', icon: ShieldCheck, to: '/security' },
 ];
 
 /**

@@ -33,10 +33,14 @@ const envSchema = z.object({
   // Directory holding the known-good demo snapshot, created by `npm run demo:snapshot`.
   // Deliberately outside PostgreSQL itself (see docs/demo-recovery.md).
   DEMO_BACKUP_DIR: z.string().default('./backups'),
-  // Operations Intelligence Agent (admin + public, read-only). All three are optional: a
+  // Operations Intelligence Agent (admin + public, read-only). All four are optional: a
   // deployment with none configured still runs normally, the agent endpoints just report a
   // clear "unavailable" error. When more than one is set, agent/providers.ts fails over between
-  // them in the fixed order Gemini -> Groq -> OpenRouter.
+  // them in the fixed priority order Requesty -> Groq -> OpenRouter -> Gemini.
+  REQUESTY_API_KEY: z.string().optional(),
+  // Kill switch: when false, Requesty is never constructed or called, regardless of whether a
+  // key is set. Useful while its account is in a known-bad billing/approval state.
+  REQUESTY_ENABLED: booleanString.default('true' as const),
   GEMINI_API_KEY: z.string().optional(),
   GROQ_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),
@@ -81,11 +85,13 @@ export const env = {
     .map((o) => o.trim())
     .filter(Boolean),
   demoBackupDir: path.resolve(__dirname, '../../../', raw.DEMO_BACKUP_DIR),
+  hasRequesty: Boolean(raw.REQUESTY_API_KEY) && raw.REQUESTY_ENABLED,
+  requestyEnabled: raw.REQUESTY_ENABLED,
   hasGemini: Boolean(raw.GEMINI_API_KEY),
   hasGroq: Boolean(raw.GROQ_API_KEY),
   hasOpenRouter: Boolean(raw.OPENROUTER_API_KEY),
   openRouterModel: raw.OPENROUTER_MODEL,
-  hasAnyAgentProvider: Boolean(raw.GEMINI_API_KEY || raw.GROQ_API_KEY || raw.OPENROUTER_API_KEY),
+  hasAnyAgentProvider: Boolean(raw.REQUESTY_API_KEY || raw.GEMINI_API_KEY || raw.GROQ_API_KEY || raw.OPENROUTER_API_KEY),
 } as const;
 
 export type Env = typeof env;

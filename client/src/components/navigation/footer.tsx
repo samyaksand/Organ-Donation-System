@@ -30,6 +30,11 @@ export function Footer() {
                 Become a donor
               </Link>
             </li>
+            <li>
+              <Link className="hover:text-foreground" to="/security">
+                Privacy & Security
+              </Link>
+            </li>
           </ul>
         </nav>
         <nav aria-label="Accounts" className="space-y-3 text-sm">

@@ -1,4 +1,4 @@
-import { Loader2, Search, Sparkles } from 'lucide-react';
+import { Loader2, Search, ShieldAlert, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '@/api/client';
 import { EmptyState } from '@/components/common/empty-state';
@@ -119,7 +119,15 @@ export function AdminOperationsIntelligencePage() {
         />
       )}
 
-      {investigate.data && !investigate.isPending && (
+      {investigate.data?.blocked && !investigate.isPending && (
+        <EmptyState
+          icon={ShieldAlert}
+          title="This question was not investigated"
+          description={investigate.data.message}
+        />
+      )}
+
+      {investigate.data && !investigate.data.blocked && !investigate.isPending && (
         <div className="space-y-5">
           <Card>
             <CardContent className="space-y-2 p-5">

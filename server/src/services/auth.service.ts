@@ -6,8 +6,9 @@ import { generateDonorCode } from '../utils/donorCode';
 import { AppError, fieldErrors } from '../utils/errors';
 
 const EMAIL_TAKEN = 'An account with this email already exists';
-import { signToken } from '../utils/jwt';
 import { burnPasswordCheck, hashPassword, verifyPassword } from '../utils/password';
+import { createSession } from './session.service';
+import { recordSecurityActivity } from './securityActivity.service';
 
 const sessionUserSelect = {
   id: true,
@@ -38,8 +39,13 @@ function isUniqueViolation(err: unknown, field: string): boolean {
   return fields.some((f) => String(f).includes(field));
 }
 
+export interface RequestMeta {
+  userAgent: string | undefined;
+  ipAddress: string | undefined;
+}
+
 /** Donor self-registration (legacy POST /auth/register). Creates User + Donor + NextOfKin atomically. */
-export async function registerDonor(input: RegisterInput): Promise<{ user: SessionUser; token: string }> {
+export async function registerDonor(input: RegisterInput, meta: RequestMeta): Promise<{ user: SessionUser; token: string }> {
   const existing = await prisma.user.findUnique({ where: { email: input.email }, select: { id: true } });
   if (existing) throw AppError.conflict(EMAIL_TAKEN, fieldErrors(['email', EMAIL_TAKEN]));
 
@@ -85,7 +91,9 @@ export async function registerDonor(input: RegisterInput): Promise<{ user: Sessi
         },
         select: sessionUserSelect,
       });
-      return { user: toSessionUser(user), token: signToken({ sub: user.id, role: user.role }) };
+      const { token } = await createSession({ userId: user.id, role: user.role, userAgent: meta.userAgent, ipAddress: meta.ipAddress });
+      recordSecurityActivity({ userId: user.id, role: 'DONOR', resource: 'auth-session', action: 'LOGIN', decision: 'ALLOW', reason: 'Account registered and signed in.' });
+      return { user: toSessionUser(user), token };
     } catch (err) {
       if (isUniqueViolation(err, 'donor_code')) continue;
       if (isUniqueViolation(err, 'email')) {
@@ -101,7 +109,7 @@ export async function registerDonor(input: RegisterInput): Promise<{ user: Sessi
  * Login for both roles (legacy /auth/logind by email and /auth/loginad by AdminID).
  * Admin passwords are now bcrypt hashes like everyone else's - the legacy plaintext comparison is gone.
  */
-export async function login(input: LoginInput): Promise<{ user: SessionUser; token: string }> {
+export async function login(input: LoginInput, meta: RequestMeta): Promise<{ user: SessionUser; token: string }> {
   const user = await prisma.user.findUnique({
     where: { email: input.email },
     select: { ...sessionUserSelect, passwordHash: true },
@@ -122,9 +130,11 @@ export async function login(input: LoginInput): Promise<{ user: SessionUser; tok
   if (!portalMatches) throw AppError.invalidCredentials();
 
   await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
+  const { token } = await createSession({ userId: user.id, role: user.role, userAgent: meta.userAgent, ipAddress: meta.ipAddress });
+  recordSecurityActivity({ userId: user.id, role: user.role, resource: 'auth-session', action: 'LOGIN', decision: 'ALLOW', reason: 'Signed in successfully.' });
 
   const { passwordHash: _omit, ...safe } = user;
-  return { user: toSessionUser(safe), token: signToken({ sub: user.id, role: user.role }) };
+  return { user: toSessionUser(safe), token };
 }
 
 export async function getSessionUser(userId: string): Promise<SessionUser> {
@@ -135,7 +145,7 @@ export async function getSessionUser(userId: string): Promise<SessionUser> {
 
 /** Password change for the signed-in user (legacy dupdate field=Password, now requires the current password). */
 export async function changePassword(userId: string, input: ChangePasswordInput): Promise<void> {
-  const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true } });
+  const user = await prisma.user.findUnique({ where: { id: userId }, select: { passwordHash: true, role: true } });
   if (!user) throw AppError.unauthenticated();
 
   const ok = await verifyPassword(input.currentPassword, user.passwordHash);
@@ -146,4 +156,5 @@ export async function changePassword(userId: string, input: ChangePasswordInput)
   }
 
   await prisma.user.update({ where: { id: userId }, data: { passwordHash: await hashPassword(input.newPassword) } });
+  recordSecurityActivity({ userId, role: user.role, resource: 'auth-password', action: 'PASSWORD_CHANGED', decision: 'ALLOW', reason: 'Password changed successfully.' });
 }

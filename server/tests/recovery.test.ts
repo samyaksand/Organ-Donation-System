@@ -33,6 +33,8 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   prisma.user.update.mockResolvedValue({});
+  prisma.userSession.create.mockResolvedValue({ id: 'session_1' });
+  prisma.userSession.update.mockResolvedValue({});
 });
 
 describe('SUPER_ADMIN authentication', () => {

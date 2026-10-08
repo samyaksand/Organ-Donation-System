@@ -20,10 +20,12 @@ import { Link } from 'react-router-dom';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { OrganIconTile } from '@/components/common/organ-icon';
+import { SectionHeading } from '@/components/common/section-heading';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AskOrganFlowSection } from '@/features/public/components/ask-organflow-section';
 import { HospitalCard } from '@/features/hospitals/components/hospital-card';
 import { useHospitals } from '@/features/hospitals/hooks';
 import { useAvailabilitySummary } from '@/features/organs/hooks';
@@ -102,24 +104,12 @@ function AcademicOriginBanner() {
     <div className="border-b bg-primary/5">
       <div className="container flex flex-col items-center gap-2 py-3 text-center sm:flex-row sm:justify-center sm:gap-3 sm:py-2.5">
         <GraduationCap className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-        <p className="text-sm text-foreground/80">
-          Originally developed as a <span className="font-medium text-foreground">CS254 Database Systems (DBMS)</span> project
-          under <span className="font-medium text-foreground">Prof. Annappa</span> at{' '}
-          <span className="font-medium text-foreground">NITK Surathkal</span>.
+        <p className="min-w-0 text-sm text-foreground/80">
+          Originally developed as a CS254 Database Systems (DBMS) project under Prof. Annappa at NITK
+          Surathkal, later extended by applying concepts learned in CS418 (Information Security) taught
+          by Prof. Mahendra
         </p>
       </div>
-    </div>
-  );
-}
-
-function SectionHeading({ id, eyebrow, title, description }: { id: string; eyebrow: string; title: string; description?: string }) {
-  return (
-    <div className="mx-auto max-w-2xl space-y-2 text-center">
-      <p className="text-sm font-semibold text-primary">{eyebrow}</p>
-      <h2 id={id} className="text-2xl font-semibold sm:text-3xl">
-        {title}
-      </h2>
-      {description && <p className="text-muted-foreground">{description}</p>}
     </div>
   );
 }
@@ -434,6 +424,7 @@ export function LandingPage() {
       <OrganTypes />
       <AvailabilityOverview />
       <Hospitals />
+      <AskOrganFlowSection />
       <DonorCta />
     </>
   );

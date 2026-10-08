@@ -23,6 +23,11 @@ beforeAll(async () => {
 beforeEach(() => {
   vi.clearAllMocks();
   prisma.user.update.mockResolvedValue({});
+  // Session creation (see services/session.service.ts's createSession, called by every login/
+  // register) needs a UserSession row to exist before it can be "updated" with the real token
+  // hash - a plain id is enough for these HTTP-layer tests, which don't assert on session rows.
+  prisma.userSession.create.mockResolvedValue({ id: 'session_1' });
+  prisma.userSession.update.mockResolvedValue({});
 });
 
 function cookieHeader(res: request.Response): string {

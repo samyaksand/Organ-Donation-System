@@ -32,6 +32,10 @@ export function createPrismaMock() {
     recoveryLog: model(),
     workflowEvent: model(),
     pledge: model(),
+    securityPolicy: model(),
+    securityEvent: model(),
+    aiSecurityEvent: model(),
+    userSession: model(),
     $transaction: vi.fn(),
     $disconnect: vi.fn(),
   };

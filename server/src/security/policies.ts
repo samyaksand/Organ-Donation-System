@@ -1,0 +1,381 @@
+/**
+ * The access-control matrix: ROLE + RESOURCE + ACTION (+ OWNERSHIP where applicable) -> POLICY
+ * -> ALLOW/DENY. This is the single source of truth for every access decision in the system -
+ * policyEngine.ts only ever reads from this array, never hard-codes a decision inline, and the
+ * frontend never decides access on its own (every protected route/field is still enforced here
+ * and in Express middleware; the UI only reflects what the server already decided).
+ *
+ * `prisma/seed.ts` copies this array into the read-only SecurityPolicy table so the public
+ * Policy Explorer and admin Security dashboard can list/query it - that table is a display
+ * mirror, never the thing evaluated at request time.
+ *
+ * Ownership-scoped resources (e.g. a donor's own profile) have both an ALLOW-when-own and a
+ * DENY-when-not-own row so the matrix is a complete, explicit table rather than "PROTECTED
+ * implies ownership" implied by convention.
+ */
+import type { PolicyDefinition } from './types';
+
+export const POLICIES: PolicyDefinition[] = [
+  // --- Public resources: no account needed, aggregate/non-identifying data only -------------
+  {
+    code: 'public-organ-availability-view',
+    role: 'PUBLIC',
+    resource: 'organ-availability',
+    action: 'VIEW',
+    classification: 'PUBLIC',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Anyone can search organ availability. Donor identity is never included in the response.',
+  },
+  {
+    code: 'public-hospital-directory-view',
+    role: 'PUBLIC',
+    resource: 'hospital-directory',
+    action: 'VIEW',
+    classification: 'PUBLIC',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Hospital contact details and availability counts are public institutional information.',
+  },
+  {
+    code: 'public-analytics-view',
+    role: 'PUBLIC',
+    resource: 'public-analytics',
+    action: 'VIEW',
+    classification: 'PUBLIC',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Aggregate, narrowed analytics with no donor identity or individual-record detail.',
+  },
+  {
+    code: 'public-investigation-use',
+    role: 'PUBLIC',
+    resource: 'public-investigation',
+    action: 'INVESTIGATE',
+    classification: 'PUBLIC',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'The public AI investigation agent may be asked about public aggregate analytics only.',
+  },
+  {
+    code: 'public-pledge-create',
+    role: 'PUBLIC',
+    resource: 'pledge',
+    action: 'CREATE',
+    classification: 'PUBLIC',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Anyone may record a no-account donation pledge.',
+  },
+
+  // --- PUBLIC denied: anything identifying or administrative --------------------------------
+  {
+    code: 'public-donor-profile-deny',
+    role: 'PUBLIC',
+    resource: 'donor-profile',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'DENY',
+    description: 'Donor profiles require a signed-in account; the public can never view any donor record.',
+  },
+  {
+    code: 'public-donor-medical-info-deny',
+    role: 'PUBLIC',
+    resource: 'donor-medical-info',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: false,
+    decision: 'DENY',
+    description: 'Medical information is sensitive and never exposed publicly under any circumstance.',
+  },
+  {
+    code: 'public-admin-analytics-deny',
+    role: 'PUBLIC',
+    resource: 'admin-analytics',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'DENY',
+    description: 'Management analytics (workflow/administrative detail) is an administrator-only resource.',
+  },
+  {
+    code: 'public-security-admin-deny',
+    role: 'PUBLIC',
+    resource: 'security-admin',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: false,
+    decision: 'DENY',
+    description: 'The security audit dashboard is administrator-only.',
+  },
+
+  // --- DONOR: own-resource ALLOW -------------------------------------------------------------
+  {
+    code: 'donor-own-profile-view',
+    role: 'DONOR',
+    resource: 'donor-profile',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: "A donor may view and edit their own profile.",
+  },
+  {
+    code: 'donor-own-profile-update',
+    role: 'DONOR',
+    resource: 'donor-profile',
+    action: 'UPDATE',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may update their own profile fields.',
+  },
+  {
+    code: 'donor-own-medical-info-view',
+    role: 'DONOR',
+    resource: 'donor-medical-info',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may view their own medical information.',
+  },
+  {
+    code: 'donor-own-next-of-kin-view',
+    role: 'DONOR',
+    resource: 'donor-next-of-kin',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may view and manage their own next-of-kin record.',
+  },
+  {
+    code: 'donor-own-next-of-kin-update',
+    role: 'DONOR',
+    resource: 'donor-next-of-kin',
+    action: 'UPDATE',
+    classification: 'SENSITIVE',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may create or update their own next-of-kin record.',
+  },
+  {
+    code: 'donor-own-organ-view',
+    role: 'DONOR',
+    resource: 'donor-organ',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may view and register their own organ records.',
+  },
+  {
+    code: 'donor-own-organ-create',
+    role: 'DONOR',
+    resource: 'donor-organ',
+    action: 'CREATE',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may register a new organ record for themselves.',
+  },
+  {
+    code: 'donor-own-withdrawal-view',
+    role: 'DONOR',
+    resource: 'donor-withdrawal',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may view the status of their own withdrawal requests.',
+  },
+  {
+    code: 'donor-own-withdrawal-create',
+    role: 'DONOR',
+    resource: 'donor-withdrawal',
+    action: 'CREATE',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'ALLOW',
+    description: 'A donor may submit and track their own withdrawal requests.',
+  },
+
+  // --- DONOR: cross-donor DENY (ownership fails) ---------------------------------------------
+  {
+    code: 'donor-cross-profile-deny',
+    role: 'DONOR',
+    resource: 'donor-profile',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'DENY',
+    description: "A donor may never view another donor's profile. Ownership check fails for a non-matching donorId.",
+  },
+  {
+    code: 'donor-cross-medical-info-deny',
+    role: 'DONOR',
+    resource: 'donor-medical-info',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: true,
+    decision: 'DENY',
+    description: "A donor may never view another donor's medical information, regardless of role, since this is sensitive, ownership-scoped data.",
+  },
+  {
+    code: 'donor-cross-organ-deny',
+    role: 'DONOR',
+    resource: 'donor-organ',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: true,
+    decision: 'DENY',
+    description: "A donor may never view another donor's organ records.",
+  },
+
+  // --- DONOR denied: administrative resources --------------------------------------------------
+  {
+    code: 'donor-admin-records-deny',
+    role: 'DONOR',
+    resource: 'admin-donor-records',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: false,
+    decision: 'DENY',
+    description: 'A donor account has no access to the admin donor-management console.',
+  },
+  {
+    code: 'donor-admin-investigation-deny',
+    role: 'DONOR',
+    resource: 'admin-investigation',
+    action: 'INVESTIGATE',
+    classification: 'SENSITIVE',
+    requiresOwnership: false,
+    decision: 'DENY',
+    description: 'The admin investigation agent (with access to operational/workflow detail) is administrator-only.',
+  },
+
+  // --- ADMIN / SUPER_ADMIN: full operational access ------------------------------------------
+  {
+    code: 'admin-donor-records-view',
+    role: 'ADMIN',
+    resource: 'admin-donor-records',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators manage the full donor registry, including medical information.',
+  },
+  {
+    code: 'admin-organ-records-manage',
+    role: 'ADMIN',
+    resource: 'admin-organ-records',
+    action: 'UPDATE',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators manage organ records and status transitions.',
+  },
+  {
+    code: 'admin-hospital-records-manage',
+    role: 'ADMIN',
+    resource: 'admin-hospital-records',
+    action: 'UPDATE',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators manage hospital records.',
+  },
+  {
+    code: 'admin-withdrawal-queue-view',
+    role: 'ADMIN',
+    resource: 'admin-withdrawal-queue',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators view the withdrawal review queue and request history.',
+  },
+  {
+    code: 'admin-withdrawal-queue-review',
+    role: 'ADMIN',
+    resource: 'admin-withdrawal-queue',
+    action: 'REVIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators review and decide withdrawal requests.',
+  },
+  {
+    code: 'admin-organ-requests-view',
+    role: 'ADMIN',
+    resource: 'admin-organ-requests',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators view hospital organ requests and their history.',
+  },
+  {
+    code: 'admin-organ-requests-create',
+    role: 'ADMIN',
+    resource: 'admin-organ-requests',
+    action: 'CREATE',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators enter a hospital organ request on the requesting hospital’s behalf.',
+  },
+  {
+    code: 'admin-organ-requests-review',
+    role: 'ADMIN',
+    resource: 'admin-organ-requests',
+    action: 'REVIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators review hospital organ requests and allocate organs.',
+  },
+  {
+    code: 'admin-analytics-view',
+    role: 'ADMIN',
+    resource: 'admin-analytics',
+    action: 'VIEW',
+    classification: 'PROTECTED',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators view management analytics, KPIs and trends.',
+  },
+  {
+    code: 'admin-investigation-use',
+    role: 'ADMIN',
+    resource: 'admin-investigation',
+    action: 'INVESTIGATE',
+    classification: 'SENSITIVE',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators may ask the full operational investigation agent, with access to workflow/administrative tools.',
+  },
+  {
+    code: 'admin-security-admin-view',
+    role: 'ADMIN',
+    resource: 'security-admin',
+    action: 'VIEW',
+    classification: 'SENSITIVE',
+    requiresOwnership: false,
+    decision: 'ALLOW',
+    description: 'Administrators may view the security audit dashboard (access decisions, blocked AI requests, policy violations).',
+  },
+];
+
+/** SUPER_ADMIN inherits every ADMIN-role policy, plus anything explicitly scoped to it. Rather
+ * than duplicating every ADMIN row, derive the SUPER_ADMIN matrix by cloning ADMIN rows - this
+ * keeps the matrix DRY while still producing an explicit, queryable row for the Policy
+ * Explorer and the seeded SecurityPolicy table. */
+export function expandForSuperAdmin(policies: PolicyDefinition[]): PolicyDefinition[] {
+  const adminPolicies = policies.filter((p) => p.role === 'ADMIN');
+  return adminPolicies.map((p) => ({ ...p, code: p.code.replace(/^admin-/, 'super-admin-'), role: 'SUPER_ADMIN' as const }));
+}
+
+export const ALL_POLICIES: PolicyDefinition[] = [...POLICIES, ...expandForSuperAdmin(POLICIES)];

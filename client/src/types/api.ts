@@ -390,12 +390,36 @@ export interface AgentFinding {
 }
 
 export interface InvestigationResult {
+  blocked: false;
   summary: string;
   findings: AgentFinding[];
   toolsUsed: string[];
   insufficientEvidence: boolean;
   generatedAt: string;
 }
+
+/**
+ * One of the AI Security Gateway's classification labels (server/src/security/aiGateway.ts).
+ * Mirrors the Prisma AiRequestClassification enum.
+ */
+export type AiRequestClassification =
+  | 'ORGANFLOW_RELEVANT'
+  | 'OUT_OF_SCOPE'
+  | 'PRIVATE_DATA_REQUEST'
+  | 'CREDENTIAL_REQUEST'
+  | 'SECURITY_ABUSE'
+  | 'INAPPROPRIATE_CONTENT'
+  | 'AUTHORIZED_SECURITY_ANALYSIS';
+
+/** Returned instead of InvestigationResult when the AI Security Gateway blocks a request before
+ * any LangGraph/provider call is made - see server/src/security/aiGateway.ts. */
+export interface InvestigationBlocked {
+  blocked: true;
+  classification: AiRequestClassification;
+  message: string;
+}
+
+export type InvestigationResponse = InvestigationResult | InvestigationBlocked;
 
 // ---------------------------------------------------------------- System recovery (Super Admin)
 
@@ -419,4 +443,163 @@ export type RecoveryState =
 export interface RecoveryActionResult {
   ok: boolean;
   message: string;
+}
+
+// ---------------------------------------------------------------- Security / access control
+
+export type SecurityActorRole = 'PUBLIC' | 'DONOR' | 'ADMIN' | 'SUPER_ADMIN';
+export type SecurityResourceAction = 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE' | 'REVIEW' | 'INVESTIGATE';
+
+export const SECURITY_RESOURCES = [
+  'organ-availability',
+  'hospital-directory',
+  'public-analytics',
+  'public-investigation',
+  'pledge',
+  'donor-profile',
+  'donor-medical-info',
+  'donor-next-of-kin',
+  'donor-organ',
+  'donor-withdrawal',
+  'admin-donor-records',
+  'admin-organ-records',
+  'admin-hospital-records',
+  'admin-withdrawal-queue',
+  'admin-organ-requests',
+  'admin-analytics',
+  'admin-investigation',
+  'security-admin',
+  'security-public',
+] as const;
+export type SecurityResource = (typeof SECURITY_RESOURCES)[number];
+
+export interface SecurityPolicyDefinition {
+  code: string;
+  role: SecurityActorRole;
+  resource: SecurityResource;
+  action: SecurityResourceAction;
+  classification: DataClassification;
+  requiresOwnership: boolean;
+  decision: AccessDecision;
+  description: string;
+}
+
+export type DataClassification = 'PUBLIC' | 'PROTECTED' | 'SENSITIVE';
+export type AccessDecision = 'ALLOW' | 'DENY';
+
+export interface PolicyEvaluation {
+  decision: AccessDecision;
+  policyCode: string;
+  classification: DataClassification;
+  roleCheck: { passed: boolean; detail: string };
+  ownershipCheck: { applicable: boolean; passed: boolean; detail: string };
+  contextualCheck: { passed: boolean; detail: string };
+  reason: string;
+}
+
+export interface ExplorePolicyParams {
+  role: SecurityActorRole;
+  resource: SecurityResource;
+  action: SecurityResourceAction;
+  ownership?: 'own' | 'other';
+}
+
+export interface SecurityEventListParams extends AnalyticsWindowParams {
+  limit?: number;
+}
+
+export interface SecurityOverview {
+  window: string;
+  totalEvents: number;
+  allowCount: number;
+  denyCount: number;
+  percentChangeVsPreviousPeriod: number | null;
+  aiRequestsScreened: number;
+  aiRequestsBlocked: number;
+}
+
+export interface SecurityDecisionBreakdown {
+  window: string;
+  byRole: Array<{ role: string; decision: AccessDecision; count: number }>;
+  byResource: Array<{ resource: string; decision: AccessDecision; count: number }>;
+  byDecision: Array<{ decision: AccessDecision; count: number }>;
+}
+
+export interface SecurityEventRecord {
+  id: string;
+  actorRole: string;
+  resource: string;
+  action: string;
+  classification: DataClassification;
+  decision?: AccessDecision;
+  policyCode: string;
+  reason: string;
+  createdAt: string;
+}
+
+export interface SecurityEventList {
+  window: string;
+  events: SecurityEventRecord[];
+}
+
+export interface PolicyViolationSummary {
+  window: string;
+  violations: Array<{ policyCode: string; resource: string; role: string; count: number }>;
+}
+
+export interface SecurityTrendPoint {
+  date: string;
+  allow: number;
+  deny: number;
+}
+
+export interface SecurityTrends {
+  window: string;
+  points: SecurityTrendPoint[];
+}
+
+export interface AiSecurityEventRecord {
+  id: string;
+  actorRole: string;
+  surface: string;
+  classification: string;
+  decision: AccessDecision;
+  reason: string;
+  questionExcerpt: string | null;
+  createdAt: string;
+}
+
+export interface AiSecurityEventList {
+  window: string;
+  events: AiSecurityEventRecord[];
+}
+
+export interface AiSecurityBreakdown {
+  window: string;
+  byClassification: Array<{ classification: string; decision: AccessDecision; count: number }>;
+}
+
+// ---------------------------------------------------------------- My Security (any signed-in user)
+
+export interface MySession {
+  id: string;
+  browser: string | null;
+  os: string | null;
+  deviceLabel: string;
+  createdAt: string;
+  lastUsedAt: string;
+  isCurrent: boolean;
+}
+
+export interface MyActivityItem {
+  id: string;
+  action: string;
+  resource: string;
+  decision: AccessDecision;
+  reason: string;
+  createdAt: string;
+}
+
+export interface RevokeOtherSessionsResult {
+  revokedCount: number;
 }

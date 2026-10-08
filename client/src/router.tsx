@@ -15,6 +15,7 @@ const HospitalDirectoryPage = lazyPage(() => import('@/pages/public/hospital-dir
 const PublicAnalyticsPage = lazyPage(() => import('@/pages/public/analytics-page'), 'PublicAnalyticsPage');
 const InvestigatePage = lazyPage(() => import('@/pages/public/investigate-page'), 'InvestigatePage');
 const PledgePage = lazyPage(() => import('@/pages/public/pledge-page'), 'PledgePage');
+const SecurityPage = lazyPage(() => import('@/pages/public/security-page'), 'SecurityPage');
 const DonorLoginPage = lazyPage(() => import('@/pages/auth/donor-login-page'), 'DonorLoginPage');
 const AdminLoginPage = lazyPage(() => import('@/pages/auth/admin-login-page'), 'AdminLoginPage');
 const RegisterPage = lazyPage(() => import('@/pages/auth/register-page'), 'RegisterPage');
@@ -26,6 +27,7 @@ const DonorOrgansPage = lazyPage(() => import('@/pages/donor/donor-organs-page')
 const DonorAddOrganPage = lazyPage(() => import('@/pages/donor/donor-add-organ-page'), 'DonorAddOrganPage');
 const DonorProfilePage = lazyPage(() => import('@/pages/donor/donor-profile-page'), 'DonorProfilePage');
 const DonorWithdrawalPage = lazyPage(() => import('@/pages/donor/donor-withdrawal-page'), 'DonorWithdrawalPage');
+const DonorSecurityPage = lazyPage(() => import('@/pages/donor/donor-security-page'), 'DonorSecurityPage');
 const AdminDashboardPage = lazyPage(() => import('@/pages/admin/admin-dashboard-page'), 'AdminDashboardPage');
 const AdminAnalyticsPage = lazyPage(() => import('@/pages/admin/admin-analytics-page'), 'AdminAnalyticsPage');
 const AdminOperationsIntelligencePage = lazyPage(
@@ -41,6 +43,7 @@ const AdminOrganRequestDetailPage = lazyPage(
   () => import('@/pages/admin/admin-organ-request-detail-page'),
   'AdminOrganRequestDetailPage',
 );
+const AdminSecurityPage = lazyPage(() => import('@/pages/admin/admin-security-page'), 'AdminSecurityPage');
 const SystemRecoveryPage = lazyPage(() => import('@/pages/admin/system-recovery-page'), 'SystemRecoveryPage');
 
 export const router = createBrowserRouter([
@@ -56,6 +59,7 @@ export const router = createBrowserRouter([
           { path: 'analytics', element: <PublicAnalyticsPage /> },
           { path: 'investigate', element: <InvestigatePage /> },
           { path: 'pledge', element: <PledgePage /> },
+          { path: 'security', element: <SecurityPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },
@@ -79,6 +83,7 @@ export const router = createBrowserRouter([
               { path: 'organs/new', element: <DonorAddOrganPage /> },
               { path: 'profile', element: <DonorProfilePage /> },
               { path: 'withdrawal', element: <DonorWithdrawalPage /> },
+              { path: 'security', element: <DonorSecurityPage /> },
             ],
           },
         ],
@@ -99,6 +104,7 @@ export const router = createBrowserRouter([
               { path: 'withdrawals', element: <AdminWithdrawalsPage /> },
               { path: 'organ-requests', element: <AdminOrganRequestsPage /> },
               { path: 'organ-requests/:id', element: <AdminOrganRequestDetailPage /> },
+              { path: 'security', element: <AdminSecurityPage /> },
               {
                 path: 'recovery',
                 element: <RequireRole allow="SUPER_ADMIN" />,

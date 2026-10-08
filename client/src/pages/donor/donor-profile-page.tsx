@@ -12,6 +12,7 @@ import {
   PersonalInfoForm,
 } from '@/features/donors/components/profile-forms';
 import { useMyProfile } from '@/features/donors/hooks';
+import { WhyCanIAccessThis } from '@/features/security-center/components/why-can-i-access-this';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatDate } from '@/lib/format';
 
@@ -100,9 +101,12 @@ export function DonorProfilePage() {
 
             <TabsContent value="medical">
               <Card>
-                <CardHeader>
-                  <CardTitle>Medical &amp; care</CardTitle>
-                  <CardDescription>Your registered hospital, personal doctor and medical history.</CardDescription>
+                <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
+                  <div className="space-y-1.5">
+                    <CardTitle>Medical &amp; care</CardTitle>
+                    <CardDescription>Your registered hospital, personal doctor and medical history.</CardDescription>
+                  </div>
+                  <WhyCanIAccessThis resource="donor-medical-info" />
                 </CardHeader>
                 <CardContent>
                   <MedicalInfoForm profile={profile} />
@@ -112,9 +116,12 @@ export function DonorProfilePage() {
 
             <TabsContent value="kin">
               <Card>
-                <CardHeader>
-                  <CardTitle>Next of kin</CardTitle>
-                  <CardDescription>The person who may be contacted about your donation decision.</CardDescription>
+                <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
+                  <div className="space-y-1.5">
+                    <CardTitle>Next of kin</CardTitle>
+                    <CardDescription>The person who may be contacted about your donation decision.</CardDescription>
+                  </div>
+                  <WhyCanIAccessThis resource="donor-next-of-kin" />
                 </CardHeader>
                 <CardContent>
                   <NextOfKinForm profile={profile} />

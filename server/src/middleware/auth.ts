@@ -5,10 +5,15 @@ import { prisma } from '../lib/prisma';
 import { AppError } from '../utils/errors';
 import { AUTH_COOKIE, clearAuthCookie } from '../utils/cookies';
 import { verifyToken } from '../utils/jwt';
+import { validateSession } from '../services/session.service';
 
 /**
- * Verifies the JWT cookie and re-loads the user so that deleted accounts or changed roles
- * are rejected immediately instead of living on until token expiry.
+ * Verifies the JWT cookie, re-loads the user so that deleted accounts or changed roles are
+ * rejected immediately instead of living on until token expiry, AND (when the token carries a
+ * `jti`) checks the matching UserSession is still active - this is what makes a revoked session
+ * actually stop authenticating, rather than only removing it from a list the old cookie could
+ * still bypass. A token with no `jti` (issued before session tracking existed) is honored as
+ * before until it expires naturally; every token issued from this point on always has one.
  */
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const token: unknown = req.cookies?.[AUTH_COOKIE];
@@ -22,6 +27,14 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   } catch {
     clearAuthCookie(res);
     throw AppError.unauthenticated('Your session has expired. Please sign in again.');
+  }
+
+  if (payload.jti) {
+    const valid = await validateSession(payload.jti, token);
+    if (!valid) {
+      clearAuthCookie(res);
+      throw AppError.unauthenticated('Your session has been signed out. Please sign in again.');
+    }
   }
 
   const user = await prisma.user.findUnique({
@@ -46,6 +59,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     role: user.role,
     donorId: user.donor?.id ?? null,
     adminId: user.admin?.id ?? null,
+    sessionId: payload.jti ?? null,
   };
   req.auth = auth;
   next();

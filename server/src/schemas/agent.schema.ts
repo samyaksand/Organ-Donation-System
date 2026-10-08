@@ -88,6 +88,28 @@ export const workflowHistoryToolInput = z
   .strict();
 export type WorkflowHistoryToolInput = z.infer<typeof workflowHistoryToolInput>;
 
+// --- Security investigation tool inputs (admin-only surface, authorized-security-analysis) ---
+// Same flat/independent-schema rule applies (see the dateOnly comment above).
+
+export const securityPeriodToolInput = z
+  .object({
+    window: z.enum(ANALYTICS_WINDOWS).optional(),
+    from: dateOnly().optional(),
+    to: dateOnly().optional(),
+  })
+  .strict();
+export type SecurityPeriodToolInput = z.infer<typeof securityPeriodToolInput>;
+
+export const securityEventListToolInput = z
+  .object({
+    window: z.enum(ANALYTICS_WINDOWS).optional(),
+    from: dateOnly().optional(),
+    to: dateOnly().optional(),
+    limit: z.coerce.number().int().min(1).max(50).default(20),
+  })
+  .strict();
+export type SecurityEventListToolInput = z.infer<typeof securityEventListToolInput>;
+
 // ---------------------------------------------------------------------------
 // Output contract - the structured final answer the agent must produce. Findings separate
 // FACTS (deterministic tool results) from INTERPRETATION (agent reasoning) and RECOMMENDATION

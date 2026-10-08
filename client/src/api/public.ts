@@ -1,5 +1,5 @@
 import type {
-  InvestigationResult,
+  InvestigationResponse,
   PublicConcentration,
   PublicHospitalAvailability,
   PublicOrganAvailability,
@@ -17,5 +17,5 @@ export const publicApi = {
   concentration: () => api.get<PublicConcentration>('/public/analytics/concentration'),
   trends: () => api.get<PublicTrends>('/public/analytics/trends'),
   breaches: () => api.get<ThresholdBreach[]>('/public/analytics/breaches'),
-  investigate: (question?: string) => api.post<InvestigationResult>('/public/agent/investigate', question ? { question } : {}),
+  investigate: (question?: string) => api.post<InvestigationResponse>('/public/agent/investigate', question ? { question } : {}),
 };
